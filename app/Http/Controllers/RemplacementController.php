@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Remplacement;
 use App\Models\Agent;
+use App\Models\Site;
 
 class RemplacementController extends Controller
 {
@@ -16,19 +17,22 @@ class RemplacementController extends Controller
             ->orderBy('date_debut', 'desc')
             ->get();
 
-        return view('remplacements.index', compact('remplacements', 'categorie'));
+        // CHARGEMENT ESSENTIEL : with('site') permet de récupérer le site de l'agent
+        $agents = Agent::with('site')->orderBy('nom')->get();
+        $sites = Site::orderBy('nom')->get();
+
+        return view('remplacements.index', compact('remplacements', 'categorie', 'agents', 'sites'));
     }
 
     public function store(Request $request)
     {
-        // Validation : Seuls les 3 premiers sont obligatoires pour gagner du temps
         $request->validate([
             'agent_remplace_nom' => 'required|string|max:255',
             'poste_nom' => 'required|string|max:255',
-            'motif' => 'required|string', // Rendu obligatoire selon ta demande
-            'agent_remplacant_nom' => 'nullable|string|max:255', // OPTIONNEL
-            'site_affectation' => 'nullable|string|max:255',    // OPTIONNEL
-            'n_wave' => 'nullable|string|max:20',              // OPTIONNEL
+            'motif' => 'required|string',
+            'agent_remplacant_nom' => 'nullable|string|max:255',
+            'site_affectation' => 'nullable|string|max:255',
+            'n_wave' => 'nullable|string|max:20',
             'date_debut' => 'required|date',
             'categorie' => 'nullable|string'
         ]);
@@ -44,12 +48,14 @@ class RemplacementController extends Controller
             'categorie' => $request->categorie ?? 'Postes Vides',
         ]);
 
-        return redirect()->back()->with('success', 'La ligne a été ajoutée. Vous pourrez compléter le remplaçant plus tard !');
+        return redirect()->back()->with('success', 'La ligne a été ajoutée avec succès !');
     }
 
     public function edit(Remplacement $remplacement)
     {
-        return view('remplacements.edit', compact('remplacement'));
+        $agents = Agent::with('site')->orderBy('nom')->get();
+        $sites = Site::orderBy('nom')->get();
+        return view('remplacements.edit', compact('remplacement', 'agents', 'sites'));
     }
 
     public function update(Request $request, Remplacement $remplacement)
@@ -57,7 +63,6 @@ class RemplacementController extends Controller
         $request->validate([
             'agent_remplace_nom' => 'required|string',
             'poste_nom' => 'required|string',
-            'agent_remplacant_nom' => 'nullable|string', // Modifié ici aussi
             'date_debut' => 'required|date',
         ]);
 

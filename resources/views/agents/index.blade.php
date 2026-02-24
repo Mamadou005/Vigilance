@@ -13,7 +13,7 @@
                 <form action="{{ route('agents.index') }}" method="GET" class="search-bar-z3-mini d-flex align-items-center">
                     <input type="text" name="search" value="{{ request('search') }}"
                            class="form-control form-control-sm"
-                           placeholder="Trouver un site ou un agent...">
+                           placeholder="Trouver un agent...">
                     <button type="submit" class="btn btn-cyan-search-mini fw-bold text-uppercase">
                         RECHERCHER
                     </button>

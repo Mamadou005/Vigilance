@@ -1,9 +1,11 @@
 @extends('layouts.admin')
 
 @section('content')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 <div class="container-fluid py-4">
 
-    {{-- 1. NAVIGATION PAR DOSSIERS (7 CATÉGORIES) --}}
+    {{-- 1. NAVIGATION PAR DOSSIERS --}}
     <div class="row g-2 mb-4 justify-content-center">
         @php
         $categories = [
@@ -23,7 +25,7 @@
             <a href="{{ route('remplacements.index', ['categorie' => $name]) }}"
                class="glass-btn shadow w-100 {{ $currentCat == $name ? 'active-folder' : '' }}">
                 <i class="ph {{ $style['icon'] }} {{ $style['color'] }}"></i>
-                <span>{{ $name }}</span>
+                <span class="category-text">{{ $name }}</span>
             </a>
         </div>
         @endforeach
@@ -83,19 +85,20 @@
                     <td class="text-center">{{ \Carbon\Carbon::parse($r->date_debut)->format('d/m/Y') }}</td>
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
-                            <a href="{{ route('remplacements.edit', $r->id) }}" class="btn btn-xs btn-outline-info rounded-circle"><i class="ph ph-pencil"></i></a>
-
+                            <a href="{{ route('remplacements.edit', $r->id) }}" class="btn btn-xs btn-outline-info rounded-circle">
+                                <i class="ph ph-pencil"></i>
+                            </a>
                             <form action="{{ route('remplacements.destroy', $r->id) }}" method="POST" id="delete-form-{{ $r->id }}" class="d-none">
                                 @csrf @method('DELETE')
                             </form>
-                            <button type="button" class="btn btn-xs btn-outline-danger rounded-circle delete-btn" data-id="{{ $r->id }}">
+                            <button type="button" class="btn btn-xs btn-outline-danger rounded-circle" onclick="forcerSuppression({{ $r->id }})">
                                 <i class="ph ph-trash"></i>
                             </button>
                         </div>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="9" class="text-center py-5 text-muted italic">Aucun enregistrement dans {{ $currentCat }}.</td></tr>
+                <tr><td colspan="9" class="text-center py-5 text-muted italic">Aucun enregistrement trouvé.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -103,7 +106,7 @@
     </div>
 </div>
 
-{{-- 4. MODALE DE SAISIE DYNAMIQUE --}}
+{{-- 4. MODALE DE SAISIE --}}
 <div class="modal fade" id="modalSaisieExcel" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
@@ -115,19 +118,33 @@
                 @csrf
                 <input type="hidden" name="categorie" value="{{ $currentCat }}">
 
-                <div class="modal-body px-4 text-dark">
-                    <div class="row g-3 text-start">
+                <div class="modal-body px-4 text-dark text-start">
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <label class="small fw-bold text-muted text-uppercase mb-1">Agent Remplacé (Obligatoire)</label>
-                            <input type="text" name="agent_remplace_nom" class="form-control border-2" required>
+                            <select name="agent_remplace_nom" id="agent_remplace_select" class="form-select select2-modal" required>
+                                <option value=""></option>
+                                @foreach($agents as $agent)
+                                <option value="{{ $agent->nom }} {{ $agent->prenom }}" data-site="{{ $agent->site->nom ?? '' }}">
+                                    {{ $agent->nom }} {{ $agent->prenom }}
+                                </option>
+                                @endforeach
+                            </select>
                         </div>
+
                         <div class="col-md-6">
                             <label class="small fw-bold text-muted text-uppercase mb-1">Poste / Site (Obligatoire)</label>
-                            <input type="text" name="poste_nom" class="form-control border-2" required>
+                            <select name="poste_nom" id="poste_nom_select" class="form-select select2-modal" required>
+                                <option value=""></option>
+                                @foreach($sites as $site)
+                                <option value="{{ $site->nom }}">{{ $site->nom }}</option>
+                                @endforeach
+                            </select>
                         </div>
+
                         <div class="col-12">
                             <label class="small fw-bold text-muted text-uppercase mb-1">Motif (Obligatoire)</label>
-                            <textarea name="motif" class="form-control border-2" rows="2" required></textarea>
+                            <textarea name="motif" class="form-control border-2" rows="2" required placeholder="Ex: Permission exceptionnelle..."></textarea>
                         </div>
 
                         <hr class="my-2 opacity-25">
@@ -135,15 +152,25 @@
 
                         <div class="col-md-6">
                             <label class="small fw-bold text-muted text-uppercase mb-1">Agent Remplaçant</label>
-                            <input type="text" name="agent_remplacant_nom" class="form-control border-2">
+                            <select name="agent_remplacant_nom" class="form-select select2-modal">
+                                <option value="">À trouver plus tard...</option>
+                                @foreach($agents as $agent)
+                                <option value="{{ $agent->nom }} {{ $agent->prenom }}">{{ $agent->nom }} {{ $agent->prenom }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="small fw-bold text-muted text-uppercase mb-1">Site d'Affectation</label>
-                            <input type="text" name="site_affectation" class="form-control border-2">
+                            <select name="site_affectation" class="form-select select2-modal">
+                                <option value="">Même site</option>
+                                @foreach($sites as $site)
+                                <option value="{{ $site->nom }}">{{ $site->nom }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="small fw-bold text-muted text-uppercase mb-1">Numéro Wave</label>
-                            <input type="text" name="n_wave" class="form-control border-2">
+                            <input type="text" name="n_wave" class="form-control border-2" placeholder="00 00 00 00">
                         </div>
                         <div class="col-md-6">
                             <label class="small fw-bold text-muted text-uppercase mb-1">Date de Début</label>
@@ -161,66 +188,67 @@
     </div>
 </div>
 
-@push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-    $(document).on('click', '.delete-btn', function() {
-        const id = $(this).data('id');
+    var $j = jQuery.noConflict();
+
+    $j(document).ready(function() {
+        // Initialisation Select2
+        $j('.select2-modal').select2({
+            dropdownParent: $j('#modalSaisieExcel'),
+            placeholder: "Rechercher...",
+            width: '100%'
+        });
+
+        // Script Auto-sélection
+        $j('#agent_remplace_select').on('select2:select', function (e) {
+            var element = $j(e.params.data.element);
+            var siteAssocie = element.data('site');
+            if (siteAssocie) {
+                $j('#poste_nom_select').val(siteAssocie.toString().trim()).trigger('change');
+            }
+        });
+    });
+
+    // Fonction de suppression avec le texte restauré
+    function forcerSuppression(id) {
         Swal.fire({
-            title: 'Confirmation',
-            text: "Supprimer cette ligne du suivi ?",
+            title: 'Voulez-vous vraiment supprimer cette ligne ?',
+            text: "Cette action est irréversible !",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            confirmButtonText: 'Supprimer',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler',
             background: '#1a1a1a',
             color: '#fff'
         }).then((result) => {
             if (result.isConfirmed) {
-                $(`#delete-form-${id}`).submit();
+                document.getElementById('delete-form-' + id).submit();
             }
         });
-    });
+    }
 </script>
-@endpush
 
 <style>
-    @media (min-width: 992px) {
-        .col-lg-1-7 { width: 14.28%; flex: 0 0 14.28%; }
-    }
-
+    @media (min-width: 992px) { .col-lg-1-7 { width: 14.28%; flex: 0 0 14.28%; } }
     .glass-btn {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 5px;
-        color: white;
-        text-decoration: none !important;
-        transition: 0.3s;
-        height: 85px;
+        background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 8px 4px; color: white; text-decoration: none !important; transition: 0.3s; height: 80px;
     }
-    .glass-btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-3px); }
-    .glass-btn i { font-size: 1.5rem; margin-bottom: 4px; }
-    .glass-btn span {
-        font-weight: bold;
-        font-size: 0.58rem;
-        text-transform: uppercase;
-        color: rgba(255,255,255,0.7);
-        text-align: center;
-        line-height: 1.1;
+    .category-text {
+        font-weight: bold; font-size: 0.52rem; text-transform: uppercase;
+        color: rgba(255,255,255,0.8); text-align: center;
     }
-
-    .active-folder {
-        background: rgba(0, 210, 255, 0.1) !important;
-        border: 2px solid #00d2ff !important;
+    .active-folder { background: rgba(0, 210, 255, 0.1) !important; border: 2px solid #00d2ff !important; }
+    .select2-container--default .select2-selection--single {
+        border: 2px solid #dee2e6 !important; height: 45px !important; border-radius: 10px !important; padding-top: 8px !important;
     }
-    .active-folder span { color: #00d2ff; }
-
-    .table th { background-color: #f8f9fa !important; color: #495057 !important; padding: 12px 5px !important; }
-    .btn-xs { padding: 4px 8px; font-size: 0.75rem; border: 1px solid #dee2e6; }
 </style>
 @endsection

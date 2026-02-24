@@ -19,6 +19,7 @@
         "vite": "^7.0.4"
     },
     "dependencies": {
+        "@anthropic-ai/sdk": "^0.78.0",
         "admin-lte": "^4.0.0-rc4"
     }
 }

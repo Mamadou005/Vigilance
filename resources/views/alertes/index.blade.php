@@ -133,14 +133,16 @@
         align-items: center !important;
         justify-content: center !important;
         border-radius: 10px !important;
-        border: none !important;
+        border: none !important;npm audit fix --force
+
+
         transition: all 0.2s ease;
         text-decoration: none !important;
         cursor: pointer;
     }
 
     .btn-view { background-color: #e0f7fa !important; color: #00acc1 !important; }
-    .btn-pdf { background-color: #ffebee !important; color: #d32f2f !important; }
+    .btn-pdf { background-color: #9EFDB5FF !important; color: #ffffff !important; }
     .btn-edit { background-color: #fffde7 !important; color: #fbc02d !important; }
     .btn-delete { background-color: #ffebee !important; color: #e53935 !important; }
 
@@ -148,7 +150,7 @@
 
     .btn-light-action:hover { transform: translateY(-3px); filter: brightness(0.95); }
     .btn-view:hover { background-color: #00acc1 !important; color: white !important; }
-    .btn-pdf:hover { background-color: #d32f2f !important; color: white !important; }
+    .btn-pdf:hover { background-color: #35ED62FF !important; color: #ffffff !important; }
     .btn-edit:hover { background-color: #fbc02d !important; color: white !important; }
     .btn-delete:hover { background-color: #e53935 !important; color: white !important; }
 
