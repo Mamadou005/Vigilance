@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <label class="form-label small fw-bold text-uppercase">Site de la Banque</label>
                 <select name="site_id" class="form-select bg-dark text-white border-0 py-2" required>
-                    <option value="">-- Choisir BOA --</option>
+                    <option value="">-- Choisir Site --</option>
                     @foreach($sites as $site)
                     <option value="{{ $site->id }}">{{ $site->nom }}</option>
                     @endforeach

@@ -1,29 +1,28 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Alerte;
 use App\Models\Site;
+use Barryvdh\DomPDF\Facade\Pdf; // Importation de la bibliothèque PDF
 
 class AlerteController extends Controller
 {
     public function index()
     {
-        // On charge la relation site pour éviter l'affichage JSON
         $alertes = Alerte::with('site')->orderBy('created_at', 'desc')->get();
         return view('alertes.index', compact('alertes'));
     }
 
     public function create()
     {
-        // On envoie les sites pour la liste déroulante
         $sites = Site::all();
         return view('alertes.create', compact('sites'));
     }
 
     public function store(Request $request)
     {
-        // Enregistrement avec les nouveaux noms de colonnes
         Alerte::create([
             'site_id' => $request->site_id,
             'type_incident' => $request->type_incident,
@@ -32,7 +31,7 @@ class AlerteController extends Controller
             'intervenant_nom' => $request->intervenant_nom,
             'observations' => $request->observations,
             'statut' => 'non_traite',
-            'traitee' => 0 // Pour la compatibilité Dashboard
+            'traitee' => 0
         ]);
 
         return redirect()->route('alertes.index')->with('success', 'Incident signalé.');
@@ -42,6 +41,18 @@ class AlerteController extends Controller
     {
         $alerte->load('site');
         return view('alertes.show', compact('alerte'));
+    }
+
+    // NOUVELLE MÉTHODE POUR LE PDF
+    public function downloadPDF($id)
+    {
+        $alerte = Alerte::with('site')->findOrFail($id);
+
+        // Charge la vue spécifique au format PDF
+        $pdf = Pdf::loadView('alertes.pdf', compact('alerte'));
+
+        // Télécharge le fichier avec un nom dynamique
+        return $pdf->download('Rapport_Intervention_#' . $alerte->id . '.pdf');
     }
 
     public function edit(Alerte $alerte)

@@ -16,23 +16,38 @@ class PointageController extends Controller
         $type = $request->query('type', 'absence');
         $search = $request->query('search');
 
-        $query = Pointage::with(['agent' => function($q) {
-            $q->withSum(['pointages as total_sanctions' => function($sq) {
+        // On récupère les filtres (null si "Tous" est sélectionné)
+        $month = $request->query('month');
+        $year = $request->query('year');
+
+        $query = Pointage::with(['agent' => function($q) use ($month, $year) {
+            $q->withSum(['pointages as total_sanctions' => function($sq) use ($month, $year) {
                 $sq->where('type', 'absence');
+                if ($month) $sq->whereMonth('date_pointage', $month);
+                if ($year) $sq->whereYear('date_pointage', $year);
             }], 'montant')
-                ->withSum(['pointages as total_supplements' => function($sq) {
+                ->withSum(['pointages as total_supplements' => function($sq) use ($month, $year) {
                     $sq->where('type', 'supplementaire');
+                    if ($month) $sq->whereMonth('date_pointage', $month);
+                    if ($year) $sq->whereYear('date_pointage', $year);
                 }], 'montant');
         }, 'site']);
 
-        // Si une recherche est effectuée, on affiche TOUT l'historique de l'agent
+        // Filtrage de la liste principale
         if ($search) {
             $query->whereHas('agent', function($q) use ($search) {
-                $q->where('nom', 'LIKE', "%{$search}%")
-                    ->orWhere('prenom', 'LIKE', "%{$search}%");
+                $q->where('nom', 'LIKE', "%{$search}%")->orWhere('prenom', 'LIKE', "%{$search}%");
             });
         } else {
             $query->where('type', $type);
+        }
+
+        // NOUVEAU : On n'applique le filtre que si une valeur est sélectionnée
+        if ($month) {
+            $query->whereMonth('date_pointage', $month);
+        }
+        if ($year) {
+            $query->whereYear('date_pointage', $year);
         }
 
         $pointages = $query->orderBy('date_pointage', 'desc')->get();
@@ -46,7 +61,7 @@ class PointageController extends Controller
             'date_pointage' => 'required|date',
             'type' => 'required|in:absence,supplementaire',
             'montant' => 'nullable|integer',
-            'salaire_base' => 'nullable|integer', // Nouveau champ validé
+            'salaire_base' => 'nullable|integer',
             'motif' => 'nullable|string|max:255',
             'nb_jours' => 'nullable|integer|min:1',
             'agent_remplace' => 'nullable|string|max:255',
@@ -54,8 +69,7 @@ class PointageController extends Controller
 
         $agent = Agent::findOrFail($request->agent_id);
 
-        // Mise à jour du salaire de base de l'agent si saisi dans le formulaire
-        if ($request->has('salaire_base')) {
+        if ($request->has('salaire_base') && $request->salaire_base > 0) {
             $agent->update(['salaire_base' => $request->salaire_base]);
         }
 
@@ -103,7 +117,11 @@ class PointageController extends Controller
     public function export(Request $request)
     {
         $type = $request->query('type', 'absence');
+        $month = $request->query('month', date('m'));
+        $year = $request->query('year', date('Y'));
+
         $fileName = $type == 'absence' ? 'Rapport_Absences_Sanctions.xlsx' : 'Rapport_Heures_Supplementaires.xlsx';
-        return Excel::download(new PointagesExport($type), $fileName);
+
+        return Excel::download(new PointagesExport($type, $month, $year), $fileName);
     }
 }

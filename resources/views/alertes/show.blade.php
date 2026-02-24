@@ -73,12 +73,19 @@
 
         {{-- Footer avec Actions --}}
         <div class="card-footer bg-light p-4 text-center">
-            <button onclick="window.print()" class="btn btn-dark rounded-pill px-5 fw-bold shadow-sm me-3">
-                <i class="ph ph-printer me-2"></i>IMPRIMER LE RAPPORT
-            </button>
-            <a href="{{ route('alertes.edit', $alerte->id) }}" class="btn btn-warning rounded-pill px-5 fw-bold shadow-sm">
-                <i class="ph ph-note-pencil me-2"></i>MODIFIER LE STATUT
-            </a>
+            <div class="d-flex justify-content-center gap-2">
+                <button onclick="window.print()" class="btn btn-dark rounded-pill px-4 fw-bold shadow-sm">
+                    <i class="ph ph-printer me-2"></i>IMPRIMER
+                </button>
+
+                <a href="{{ route('alertes.pdf', $alerte->id) }}" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">
+                    <i class="ph ph-file-pdf me-2"></i>TÉLÉCHARGER PDF
+                </a>
+
+                <a href="{{ route('alertes.edit', $alerte->id) }}" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm">
+                    <i class="ph ph-note-pencil me-2"></i>MODIFIER LE STATUT
+                </a>
+            </div>
         </div>
     </div>
 </div>

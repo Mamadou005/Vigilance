@@ -2,7 +2,8 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <div class="glass-card p-4 mb-4 border-0 shadow-lg" style="background: rgba(20, 24, 28, 0.85); backdrop-filter: blur(15px); border-radius: 25px;">
+    {{-- BARRE DE TITRE ET RECHERCHE --}}
+    <div class="glass-card p-4 mb-3 border-0 shadow-lg" style="background: rgba(20, 24, 28, 0.85); backdrop-filter: blur(15px); border-radius: 25px;">
         <div class="row g-3 align-items-center">
             <div class="col-12 col-xl-3">
                 <h2 class="fw-bold text-white mb-0 text-nowrap">
@@ -10,7 +11,7 @@
                     {{ $search ? 'Historique' : ($type == 'absence' ? 'Sanctions' : 'Suppléments') }}
                 </h2>
             </div>
-    
+
             <div class="col-12 col-md-6 col-xl-4">
                 <form action="{{ route('pointages.index') }}" method="GET" class="d-flex bg-white-10 rounded-pill p-1 shadow-sm">
                     <input type="hidden" name="type" value="{{ $type }}">
@@ -31,7 +32,7 @@
                     <button class="btn btn-primary rounded-pill px-3 fw-bold shadow-sm d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalSaisieDirecte">
                         <i class="ph ph-plus-circle me-1"></i> SAISIR
                     </button>
-                    <a href="{{ route('pointages.export', ['type' => $type, 'search' => $search]) }}" class="btn btn-success rounded-pill px-3 fw-bold shadow-sm d-flex align-items-center">
+                    <a href="{{ route('pointages.export', ['type' => $type, 'search' => $search, 'month' => request('month'), 'year' => request('year')]) }}" class="btn btn-success rounded-pill px-3 fw-bold shadow-sm d-flex align-items-center">
                         <i class="ph ph-file-xls me-1"></i> EXCEL
                     </a>
 
@@ -44,6 +45,52 @@
         </div>
     </div>
 
+    {{-- BARRE DE FILTRAGE GÉNÉRALISÉE (MOIS ET ANNÉE) --}}
+    <div class="glass-card p-3 mb-4 border-0 shadow-sm" style="background: rgba(255, 255, 255, 0.05); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1) !important;">
+        <form action="{{ route('pointages.index') }}" method="GET" class="row g-2 align-items-center">
+            <input type="hidden" name="type" value="{{ $type }}">
+            <input type="hidden" name="search" value="{{ $search }}">
+
+            <div class="col-md-4">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-transparent border-0 text-white-50 small">MOIS :</span>
+                    <select name="month" class="form-select bg-dark text-white border-0 rounded-3">
+                        <option value="">Tous les mois (Général)</option>
+                        @foreach(range(1, 12) as $m)
+                        @php $mVal = sprintf('%02d', $m); @endphp
+                        <option value="{{ $mVal }}" {{ request('month') == $mVal ? 'selected' : '' }}>
+                        {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-transparent border-0 text-white-50 small">ANNÉE :</span>
+                    <select name="year" class="form-select bg-dark text-white border-0 rounded-3">
+                        <option value="">Toutes les années</option>
+                        @php $startYear = 2024; $currentYear = date('Y'); @endphp
+                        @for($y = $currentYear; $y >= $startYear; $y--)
+                        <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-5 d-flex gap-2">
+                <button type="submit" class="btn btn-info btn-sm rounded-pill px-4 fw-bold w-100">
+                    <i class="ph ph-funnel me-1"></i> APPLIQUER LE FILTRE
+                </button>
+                <a href="{{ route('pointages.index', ['type' => $type]) }}" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold" title="Vue Globale">
+                    <i class="ph ph-arrow-counter-clockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    {{-- TABLEAU DES RÉSULTATS --}}
     <div class="glass-card border-0 shadow-lg overflow-hidden" style="background: rgba(255, 255, 255, 0.95); border-radius: 25px;">
         <div class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.75rem;">
@@ -52,8 +99,8 @@
                     <th class="ps-3 py-3" style="min-width: 120px;">Agent</th>
                     <th class="py-3">Site</th>
                     <th class="py-3 text-center">Base (AS)</th>
-                    <th class="py-3 text-center">Type / Modif</th>
-                    <th class="py-3 text-center text-info" style="background: rgba(0, 210, 255, 0.05);">Salaire Net</th>
+                    <th class="py-3 text-center">Modif. Période</th>
+                    <th class="py-3 text-center text-info" style="background: rgba(0, 210, 255, 0.05);">Net à Payer</th>
                     <th class="py-3 text-center">Date</th>
                     <th class="py-3">Motif / Remplacé</th>
                     <th class="pe-3 text-center" style="min-width: 100px;">Action</th>
@@ -63,20 +110,22 @@
                 @forelse($pointages as $p)
                 @php
                 $salaireBase = $p->agent->salaire_base ?? 0;
-                $montantLigne = $p->montant ?? 0;
-                $netCumule = $salaireBase - ($p->agent->total_sanctions ?? 0) + ($p->agent->total_supplements ?? 0);
+                $sanctionsMois = $p->agent->total_sanctions ?? 0;
+                $supplementsMois = $p->agent->total_supplements ?? 0;
+                // Le calcul s'adapte automatiquement : si mois choisi = net mensuel, si "tous" = net historique
+                $netCalculé = $salaireBase - $sanctionsMois + $supplementsMois;
                 @endphp
                 <tr class="border-bottom">
                     <td class="ps-3 fw-bold text-truncate" style="max-width: 130px;">{{ $p->agent->nom }} {{ $p->agent->prenom }}</td>
-                    <td><span class="badge bg-light text-dark border px-2 rounded-pill fw-bold" style="font-size: 0.65rem;">{{ Str::limit($p->site->nom, 10) }}</span></td>
+                    <td><span class="badge bg-light text-dark border px-2 rounded-pill fw-bold" style="font-size: 0.65rem;">{{ Str::limit($p->site->nom ?? 'N/A', 10) }}</span></td>
                     <td class="text-center text-muted fw-bold">{{ number_format($salaireBase, 0, ',', ' ') }}</td>
                     <td class="text-center">
                         <span class="fw-bold text-{{ $p->type == 'absence' ? 'danger' : 'success' }}">
-                            {{ $p->type == 'absence' ? '-' : '+' }}{{ number_format($montantLigne, 0, ',', ' ') }}
+                            {{ $p->type == 'absence' ? '-' : '+' }}{{ number_format($p->montant, 0, ',', ' ') }}
                         </span>
                     </td>
                     <td class="text-center fw-bold text-primary" style="background: rgba(0, 210, 255, 0.08);">
-                        {{ number_format($netCumule, 0, ',', ' ') }} F
+                        {{ number_format($netCalculé, 0, ',', ' ') }} F
                     </td>
                     <td class="text-center">{{ \Carbon\Carbon::parse($p->date_pointage)->format('d/m/y') }}</td>
                     <td class="small text-truncate" style="max-width: 150px;">
@@ -96,7 +145,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center py-5 text-muted">Aucun enregistrement.</td></tr>
+                <tr><td colspan="8" class="text-center py-5 text-muted">Aucun enregistrement trouvé pour cette sélection.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -191,5 +240,6 @@
     .bg-white-10 { background: rgba(255, 255, 255, 0.1); }
     .btn-xs { padding: 2px 8px; font-size: 0.75rem; }
     .table td, .table th { padding: 0.6rem 0.4rem !important; }
+    .form-select.bg-dark:focus { background-color: #1a1a1a; color: white; border: 1px solid #00d2ff; }
 </style>
 @endsection

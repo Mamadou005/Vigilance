@@ -1,12 +1,14 @@
 @extends('layouts.admin')
 
 @section('content')
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+
 <div class="container-fluid">
     {{-- ENTÊTE --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="text-white-shadow">
             <h1 class="fw-bold text-white mb-0" style="text-shadow: 2px 2px 8px rgb(0,0,0);">JOURNAL DES ALERTES</h1>
-            <p class="small text-uppercase tracking-widest text-white fw-bold mb-0" style="opacity: 1 !important;">
+            <p class="small text-uppercase tracking-widest text-white fw-bold mb-0">
                 Rapports d'incidents et interventions Brigade
             </p>
         </div>
@@ -48,10 +50,10 @@
                         <td>
                             @php
                             $statusClass = [
-                            'non_traite' => 'bg-danger',
-                            'en_cours' => 'bg-warning',
-                            'resolu' => 'bg-success'
-                            ][$alerte->statut] ?? 'bg-secondary';
+                            'non_traite' => 'bg-danger-subtle text-danger',
+                            'en_cours' => 'bg-warning-subtle text-warning',
+                            'resolu' => 'bg-success-subtle text-success'
+                            ][$alerte->statut] ?? 'bg-secondary-subtle text-secondary';
                             @endphp
                             <span class="badge {{ $statusClass }} rounded-pill px-3 text-uppercase" style="font-size: 0.7rem;">
                                 {{ str_replace('_', ' ', $alerte->statut) }}
@@ -59,24 +61,24 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center align-items-center gap-2">
-                                {{-- BOUTON VOIR --}}
-                                <a href="{{ route('alertes.show', $alerte->id) }}" class="btn btn-custom-action btn-show" title="Voir">
-                                    <i class="ph ph-eye"></i>
+                                <a href="{{ route('alertes.show', $alerte->id) }}" class="btn-light-action btn-view" title="Voir">
+                                    <i class="ph-bold ph-eye"></i>
                                 </a>
 
-                                {{-- BOUTON MODIFIER --}}
-                                <a href="{{ route('alertes.edit', $alerte->id) }}" class="btn btn-custom-action btn-edit" title="Modifier">
-                                    <i class="ph ph-pencil-simple"></i>
+                                <a href="{{ route('alertes.pdf', $alerte->id) }}" class="btn-light-action btn-pdf" title="Télécharger PDF">
+                                    <i class="ph-bold ph-file-pdf text-danger"></i>
                                 </a>
 
-                                {{-- BOUTON SUPPRIMER HARMONISÉ --}}
-                                <button type="button" class="btn btn-custom-action btn-delete"
+                                <a href="{{ route('alertes.edit', $alerte->id) }}" class="btn-light-action btn-edit" title="Modifier">
+                                    <i class="ph-bold ph-pencil-simple"></i>
+                                </a>
+
+                                <button type="button" class="btn-light-action btn-delete"
                                         onclick="confirmDelete({{ $alerte->id }}, '{{ $alerte->site->nom ?? 'cette alerte' }}')"
                                         title="Supprimer">
-                                    <i class="ph ph-trash"></i>
+                                    <i class="ph-bold ph-trash"></i>
                                 </button>
 
-                                {{-- Formulaire caché pour la suppression --}}
                                 <form id="delete-form-{{ $alerte->id }}" action="{{ route('alertes.destroy', $alerte->id) }}" method="POST" style="display: none;">
                                     @csrf
                                     @method('DELETE')
@@ -94,23 +96,23 @@
     </div>
 </div>
 
-{{-- SCRIPT POUR LA FENÊTRE DE CONFIRMATION --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function confirmDelete(id, siteName) {
         Swal.fire({
-            title: 'Confirmation de suppression',
-            text: "Supprimer ce rapport pour " + siteName + " définitivement ?",
+            title: 'Supprimer ?',
+            text: "Voulez-vous vraiment supprimer ce rapport pour " + siteName + " ?",
             icon: 'warning',
+            iconColor: '#ff5e5e',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Supprimer',
+            confirmButtonColor: '#ff5e5e',
+            cancelButtonColor: '#444',
+            confirmButtonText: 'Oui, supprimer',
             cancelButtonText: 'Annuler',
             background: '#1a1a1a',
             color: '#ffffff',
             customClass: {
-                popup: 'rounded-4 shadow-lg border border-secondary'
+                popup: 'rounded-4 border border-secondary shadow-lg'
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -122,30 +124,33 @@
 
 <style>
     .glass-card-solid { background: rgba(255, 255, 255, 0.95) !important; border-radius: 20px !important; }
-    .table thead th { border: none; letter-spacing: 1px; font-weight: 800; padding: 15px; }
+    .table thead th { border: none; letter-spacing: 1px; font-weight: 800; padding: 15px; font-size: 0.75rem; }
 
-    /* BOUTONS D'ACTIONS MINI ET DISCRETS */
-    .btn-custom-action {
-        width: 24px !important;
-        height: 24px !important;
-        display: inline-flex !important;
+    .btn-light-action {
+        width: 36px !important;
+        height: 36px !important;
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        border-radius: 50% !important;
-        padding: 0 !important;
-        background-color: transparent !important;
-        border: 1px solid #dee2e6 !important;
-        color: #adb5bd !important;
-        transition: all 0.3s ease;
+        border-radius: 10px !important;
+        border: none !important;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
         cursor: pointer;
     }
 
-    .btn-custom-action i { font-size: 0.85rem !important; }
+    .btn-view { background-color: #e0f7fa !important; color: #00acc1 !important; }
+    .btn-pdf { background-color: #ffebee !important; color: #d32f2f !important; }
+    .btn-edit { background-color: #fffde7 !important; color: #fbc02d !important; }
+    .btn-delete { background-color: #ffebee !important; color: #e53935 !important; }
 
-    /* EFFETS HOVER PAR BOUTON */
-    .btn-show:hover { background-color: #0dcaf0 !important; border-color: #0dcaf0 !important; color: white !important; }
-    .btn-edit:hover { background-color: #ffc107 !important; border-color: #ffc107 !important; color: black !important; }
-    .btn-delete:hover { background-color: #dc3545 !important; border-color: #dc3545 !important; color: white !important; }
+    .btn-light-action i { font-size: 1.25rem !important; }
+
+    .btn-light-action:hover { transform: translateY(-3px); filter: brightness(0.95); }
+    .btn-view:hover { background-color: #00acc1 !important; color: white !important; }
+    .btn-pdf:hover { background-color: #d32f2f !important; color: white !important; }
+    .btn-edit:hover { background-color: #fbc02d !important; color: white !important; }
+    .btn-delete:hover { background-color: #e53935 !important; color: white !important; }
 
     .text-white-shadow { text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
 </style>
