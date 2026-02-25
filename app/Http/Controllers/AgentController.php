@@ -21,7 +21,6 @@ class AgentController extends Controller
 
     /**
      * Liste des agents avec support de recherche.
-     * Envoie 'agents' pour ton interface de cartes et 'sitesGrouped' pour les regroupements.
      */
     public function index(Request $request)
     {
@@ -43,7 +42,7 @@ class AgentController extends Controller
     }
 
     /**
-     * Affiche le formulaire de création avec la liste des sites disponibles.
+     * Affiche le formulaire de création.
      */
     public function create(Request $request)
     {
@@ -57,22 +56,21 @@ class AgentController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
-            'statut' => 'required|string|max:50',
+            'statut' => 'required|string|max:50', // La migration autorise désormais 'Repos'
             'site_id' => 'nullable|exists:sites,id',
-            'telephone' => 'nullable|string', // Optionnel pour tes cartes
+            'telephone' => 'nullable|string|max:20',
         ]);
 
-        Agent::create($request->all());
+        Agent::create($validated);
 
         return redirect()->route('agents.index')->with('success', 'Agent ajouté avec succès !');
     }
 
     /**
      * Prépare les données pour la vue 'agents.edit'.
-     * Envoie l'agent et la liste des sites pour permettre la réaffectation.
      */
     public function edit(Agent $agent)
     {
@@ -85,14 +83,15 @@ class AgentController extends Controller
      */
     public function update(Request $request, Agent $agent)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
             'statut' => 'required|string|max:50',
             'site_id' => 'nullable|exists:sites,id',
+            'telephone' => 'nullable|string|max:20',
         ]);
 
-        $agent->update($request->all());
+        $agent->update($validated);
 
         return redirect()->route('agents.index')->with('success', 'Agent mis à jour avec succès !');
     }

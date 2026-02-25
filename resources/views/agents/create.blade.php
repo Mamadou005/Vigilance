@@ -34,13 +34,13 @@
                     @endforeach
                 </select>
             </div>
+            <div class="col-md-12">
+                <label class="small text-uppercase opacity-75 fw-bold mb-2 text-white">Numéro de Téléphone</label>
+                <input type="text" name="telephone" class="form-control bg-white-10 text-black border-0 rounded-3 py-3 px-4" placeholder="Ex: 77 000 00 00">
+            </div>
             <div class="col-12 d-flex justify-content-between mt-5">
                 <a href="{{ route('agents.index') }}" class="btn btn-outline-light rounded-pill px-4">Annuler</a>
                 <button type="submit" class="btn btn-primary rounded-pill px-5 shadow fw-bold text-uppercase">Enregistrer</button>
-            </div>
-            <div class="col-md-12">
-                <label class="small text-uppercase opacity-75 fw-bold mb-2 text-white">Numéro de Téléphone</label>
-                <input type="text" name="telephone" class="form-control bg-white-10 text-white border-0 rounded-3 py-3 px-4" placeholder="Ex: 77 000 00 00">
             </div>
         </form>
     </div>
