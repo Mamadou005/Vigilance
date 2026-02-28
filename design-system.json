@@ -1,0 +1,275 @@
+{
+  "designSystem": {
+    "name": "VIGILANCE-COS Premium",
+    "version": "1.0.0",
+    "description": "Design system premium SaaS pour application de gestion de sécurité",
+
+    "colors": {
+      "primary": {
+        "50": "#f0f9ff",
+        "100": "#e0f2fe",
+        "200": "#bae6fd",
+        "300": "#7dd3fc",
+        "400": "#38bdf8",
+        "500": "#0ea5e9",
+        "600": "#0284c7",
+        "700": "#0369a1",
+        "800": "#075985",
+        "900": "#0c4a6e",
+        "950": "#082f49"
+      },
+      "navy": {
+        "50": "#f8fafc",
+        "100": "#f1f5f9",
+        "200": "#e2e8f0",
+        "300": "#cbd5e1",
+        "400": "#94a3b8",
+        "500": "#64748b",
+        "600": "#475569",
+        "700": "#334155",
+        "800": "#1e293b",
+        "900": "#0f172a",
+        "950": "#020617"
+      },
+      "accent": {
+        "orange": "#ff6b35",
+        "red": "#ef4444",
+        "cyan": "#06b6d4",
+        "emerald": "#10b981"
+      },
+      "semantic": {
+        "success": "#10b981",
+        "warning": "#f59e0b",
+        "danger": "#ef4444",
+        "info": "#3b82f6"
+      }
+    },
+
+    "typography": {
+      "fontFamily": {
+        "primary": "Inter, system-ui, sans-serif"
+      },
+      "fontSize": {
+        "xs": "12px",
+        "sm": "14px",
+        "base": "16px",
+        "lg": "18px",
+        "xl": "20px",
+        "2xl": "24px",
+        "3xl": "30px",
+        "4xl": "36px"
+      },
+      "fontWeight": {
+        "light": 300,
+        "normal": 400,
+        "medium": 500,
+        "semibold": 600,
+        "bold": 700,
+        "extrabold": 800,
+        "black": 900
+      },
+      "lineHeight": {
+        "tight": 1.25,
+        "normal": 1.5,
+        "relaxed": 1.75
+      }
+    },
+
+    "spacing": {
+      "scale": "4px base (Tailwind default)",
+      "common": {
+        "1": "4px",
+        "2": "8px",
+        "3": "12px",
+        "4": "16px",
+        "6": "24px",
+        "8": "32px",
+        "10": "40px",
+        "12": "48px"
+      }
+    },
+
+    "borderRadius": {
+      "sm": "4px",
+      "md": "8px",
+      "lg": "12px",
+      "xl": "16px",
+      "2xl": "24px",
+      "full": "9999px"
+    },
+
+    "shadows": {
+      "premium": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      "premium-lg": "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+      "glow": "0 0 20px rgba(14, 165, 233, 0.5)",
+      "glow-sm": "0 0 10px rgba(14, 165, 233, 0.3)"
+    },
+
+    "effects": {
+      "glassMorphism": {
+        "light": "rgba(15, 23, 42, 0.6) with backdrop-blur(20px)",
+        "strong": "rgba(15, 23, 42, 0.8) with backdrop-blur(30px)"
+      },
+      "gradients": {
+        "premium": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        "security": "linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%)",
+        "danger": "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+        "success": "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+      }
+    },
+
+    "animations": {
+      "duration": {
+        "fast": "150ms",
+        "normal": "200ms",
+        "slow": "300ms"
+      },
+      "easing": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "types": [
+        "fade-in",
+        "slide-in",
+        "scale-in",
+        "pulse-slow",
+        "hover-lift",
+        "hover-glow"
+      ]
+    },
+
+    "components": {
+      "card": {
+        "padding": "24px (p-6)",
+        "borderRadius": "24px (rounded-2xl)",
+        "background": "glass-effect",
+        "border": "1px solid rgba(148, 163, 184, 0.1)"
+      },
+      "button": {
+        "sizes": {
+          "sm": "px-3 py-2",
+          "md": "px-4 py-2.5",
+          "lg": "px-6 py-3",
+          "xl": "px-8 py-4"
+        },
+        "types": [
+          "primary",
+          "danger",
+          "success",
+          "secondary",
+          "outline",
+          "ghost"
+        ],
+        "borderRadius": "16px (rounded-xl)",
+        "transition": "all 200ms + hover:scale-105"
+      },
+      "badge": {
+        "padding": "px-3 py-1",
+        "fontSize": "12px (text-xs)",
+        "borderRadius": "8px (rounded-lg)",
+        "fontWeight": "600 (font-semibold)",
+        "types": [
+          "success",
+          "danger",
+          "warning",
+          "info",
+          "primary",
+          "inactive"
+        ]
+      },
+      "input": {
+        "height": "40px (py-2.5)",
+        "padding": "px-4 or pl-10 (with icon)",
+        "borderRadius": "16px (rounded-xl)",
+        "background": "rgba(15, 23, 42, 0.5)",
+        "border": "1px solid rgba(51, 65, 85, 0.5)",
+        "focusRing": "2px primary-500"
+      },
+      "table": {
+        "headerBackground": "rgba(15, 23, 42, 0.5)",
+        "rowHover": "rgba(30, 41, 59, 0.3)",
+        "borderColor": "rgba(51, 65, 85, 0.3)",
+        "cellPadding": "px-6 py-4"
+      }
+    },
+
+    "layout": {
+      "sidebar": {
+        "width": "256px (w-64)",
+        "background": "glass-effect",
+        "borderRight": "1px solid rgba(30, 41, 59, 0.5)",
+        "padding": "16px (p-4)"
+      },
+      "header": {
+        "height": "64px (h-16)",
+        "background": "glass-effect",
+        "borderBottom": "1px solid rgba(30, 41, 59, 0.5)",
+        "sticky": true
+      },
+      "content": {
+        "padding": "24px (p-6)",
+        "maxWidth": "none (sidebar pushes content)",
+        "background": "navy-950"
+      }
+    },
+
+    "icons": {
+      "library": "Phosphor Icons",
+      "sizes": {
+        "sm": "16px",
+        "md": "20px",
+        "lg": "24px",
+        "xl": "32px"
+      },
+      "usage": "ph-bold for emphasis, ph for regular"
+    },
+
+    "breakpoints": {
+      "sm": "640px",
+      "md": "768px",
+      "lg": "1024px",
+      "xl": "1280px",
+      "2xl": "1536px"
+    },
+
+    "zIndex": {
+      "sidebar": 50,
+      "header": 30,
+      "overlay": 40,
+      "toast": 50,
+      "modal": 60
+    }
+  },
+
+  "usage": {
+    "bladeComponents": [
+      "x-premium.card",
+      "x-premium.badge",
+      "x-premium.button",
+      "x-premium.table",
+      "x-premium.input",
+      "x-premium.select",
+      "x-premium.loading-skeleton",
+      "x-premium.empty-state"
+    ],
+    "cssClasses": [
+      "glass-effect",
+      "glass-strong",
+      "hover-lift",
+      "hover-glow",
+      "shadow-premium",
+      "shadow-premium-lg",
+      "shadow-glow",
+      "bg-gradient-premium",
+      "bg-gradient-security"
+    ],
+    "examplePages": [
+      "resources/views/dashboard-premium.blade.php",
+      "resources/views/agents/index-premium.blade.php",
+      "resources/views/agents/create-premium.blade.php"
+    ]
+  },
+
+  "documentation": [
+    "PREMIUM_UI_GUIDE.md",
+    "REDESIGN_SUMMARY.md",
+    "MIGRATION_GUIDE.md"
+  ]
+}

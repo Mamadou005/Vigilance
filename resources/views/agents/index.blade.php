@@ -1,243 +1,335 @@
 @extends('layouts.admin')
 
+@section('content_header_title', 'Gestion des Agents')
+@section('content_header_subtitle', 'Liste complète des agents de sécurité')
+
 @section('content')
-<div class="container-fluid py-4">
-    {{-- Header Premium avec Barre de Recherche style "Z3" --}}
-    <div class="glass-card p-3 mb-5 border-0 shadow-lg" style="background: rgba(20, 24, 28, 0.85); backdrop-filter: blur(15px); border-radius: 25px;">
-        <div class="row align-items-center">
-            <div class="col-md-3">
-                <h4 class="fw-bold mb-0 text-white ms-2">Gestion des Agents</h4>
-            </div>
 
-            <div class="col-md-6">
-                <form action="{{ route('agents.index') }}" method="GET" class="search-bar-z3-mini d-flex align-items-center">
-                    <input type="text" name="search" value="{{ request('search') }}"
-                           class="form-control form-control-sm"
-                           placeholder="Trouver un agent...">
-                    <button type="submit" class="btn btn-cyan-search-mini fw-bold text-uppercase">
-                        RECHERCHER
+{{-- Header avec Recherche --}}
+<div class="glass-card rounded-2xl p-6 mb-6">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <h3 class="text-2xl font-black text-gray-900">
+            <i class="ph-bold ph-users-three text-blue-600 mr-2"></i>
+            Liste des Agents
+        </h3>
+
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            {{-- Barre de Recherche --}}
+            <form action="{{ route('agents.index') }}" method="GET" class="flex-1 md:flex-initial">
+                <div class="relative">
+                    <input type="text"
+                           name="search"
+                           value="{{ request('search') }}"
+                           placeholder="Rechercher un agent..."
+                           class="w-full md:w-80 pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium">
+                    <i class="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+                    <button type="submit"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-lg transition-all">
+                        Rechercher
                     </button>
-                </form>
-            </div>
+                </div>
+            </form>
 
-            <div class="col-md-3 text-end">
-                <a href="{{ route('agents.create') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
-                    <i class="ph ph-plus-circle me-2"></i> Nouvel Agent
-                </a>
-            </div>
+            {{-- Bouton Ajouter --}}
+            <a href="{{ route('agents.create') }}"
+               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 whitespace-nowrap">
+                <i class="ph-bold ph-plus-circle mr-2 text-xl"></i>
+                Nouvel Agent
+            </a>
         </div>
     </div>
+</div>
 
-    {{-- Grille des Agents --}}
-    <div class="row g-4">
-        @forelse($agents as $agent)
-        <div class="col-md-6 col-lg-4 col-xl-3">
-            <div class="agent-card-wrapper shadow-lg">
-                <div class="card-top p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="avatar-box">
-                            <i class="ph ph-user-circle text-primary display-5"></i>
-                        </div>
-                        <div class="status-dot {{ $agent->statut == 'Présent' ? 'bg-success' : 'bg-danger' }}"></div>
-                    </div>
-                    <h5 class="fw-bold text-white mb-1">{{ $agent->nom }} {{ $agent->prenom }}</h5>
-                    <p class="text-white-50 small mb-3"><i class="ph ph-fingerprint me-1"></i> Matricule: {{ $agent->matricule ?? 'N/A' }}</p>
-                    <div class="agent-info text-white-50 small">
-                        <div class="mb-1"><i class="ph ph-bank me-2"></i>{{ $agent->site->nom ?? 'Non affecté' }}</div>
-                        <div><i class="ph ph-phone me-2"></i>{{ $agent->telephone ?? 'N/A' }}</div>
-                    </div>
+{{-- Grille des Agents --}}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    @forelse($agents as $agent)
+    <div class="glass-card rounded-2xl overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300"
+         x-data="{ showModal: false }">
+        {{-- Header Card --}}
+        <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-6">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
+                    <i class="ph-bold ph-user-circle text-blue-600 text-4xl"></i>
                 </div>
+                <div class="flex items-center space-x-2">
+                    @if($agent->statut == 'Présent')
+                        <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50"></div>
+                        <span class="text-xs font-bold text-emerald-400 uppercase">Présent</span>
+                    @else
+                        <div class="w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"></div>
+                        <span class="text-xs font-bold text-red-400 uppercase">{{ $agent->statut }}</span>
+                    @endif
+                </div>
+            </div>
 
-                {{-- Partie Inférieure : 3 actions alignées proprement --}}
-                <div class="card-bottom bg-white p-2">
-                    <div class="row g-0 align-items-center text-center">
-                        {{-- Action Modifier --}}
-                        <div class="col-4 border-end">
-                            <a href="{{ route('agents.edit', $agent->id) }}" class="btn btn-link text-dark p-0 text-decoration-none fw-bold action-link">
-                                <i class="ph ph-pencil-simple d-block mb-1 mx-auto"></i> MODIFIER
-                            </a>
-                        </div>
-                        {{-- Action Pointer --}}
-                        <div class="col-4 px-1">
-                            <button type="button" class="btn btn-cyan-pointer rounded-pill w-100 fw-bold text-white shadow-sm py-1"
-                                    data-bs-toggle="modal" data-bs-target="#modalPointage{{ $agent->id }}">
-                                POINTER
-                            </button>
-                        </div>
-                        {{-- Action Supprimer MODIFIÉE --}}
-                        <div class="col-4 border-start">
-                            <form action="{{ route('agents.destroy', $agent->id) }}" method="POST" id="delete-form-{{ $agent->id }}" class="d-none">
-                                @csrf @method('DELETE')
-                            </form>
-                            <button type="button" class="btn btn-link text-danger p-0 text-decoration-none fw-bold action-link delete-btn" data-id="{{ $agent->id }}">
-                                <i class="ph ph-trash d-block mb-1 mx-auto"></i> SUPPRIMER
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <h5 class="text-xl font-black text-white mb-1">{{ $agent->nom }} {{ $agent->prenom }}</h5>
+            <p class="text-gray-400 text-sm font-medium flex items-center">
+                <i class="ph-bold ph-fingerprint mr-2"></i>
+                Matricule: {{ $agent->matricule ?? 'N/A' }}
+            </p>
+        </div>
+
+        {{-- Info Card --}}
+        <div class="p-4 bg-white space-y-2">
+            <div class="flex items-center text-gray-700">
+                <i class="ph-bold ph-bank text-purple-600 mr-3 text-lg"></i>
+                <span class="text-sm font-medium">{{ $agent->site->nom ?? 'Non affecté' }}</span>
+            </div>
+            <div class="flex items-center text-gray-700">
+                <i class="ph-bold ph-phone text-emerald-600 mr-3 text-lg"></i>
+                <span class="text-sm font-medium">{{ $agent->telephone ?? 'N/A' }}</span>
             </div>
         </div>
 
-        {{-- MODALE DE POINTAGE --}}
-        <div class="modal fade" id="modalPointage{{ $agent->id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; background: rgba(255,255,255,0.98);">
-                    <div class="modal-header border-0 pb-0 pt-4 px-4">
-                        <h5 class="modal-title fw-bold text-dark">Pointage : {{ $agent->nom }} {{ $agent->prenom }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        {{-- Actions --}}
+        <div class="grid grid-cols-3 gap-px bg-gray-200">
+            <a href="{{ route('agents.edit', $agent->id) }}"
+               class="bg-white hover:bg-blue-50 p-3 flex flex-col items-center justify-center transition-colors group">
+                <i class="ph-bold ph-pencil-simple text-blue-600 text-xl mb-1"></i>
+                <span class="text-xs font-bold text-gray-700 uppercase">Modifier</span>
+            </a>
+
+            <button @click="showModal = true"
+                    class="bg-white hover:bg-cyan-50 p-3 flex flex-col items-center justify-center transition-colors group">
+                <i class="ph-bold ph-fingerprint text-cyan-600 text-xl mb-1"></i>
+                <span class="text-xs font-bold text-gray-700 uppercase">Pointer</span>
+            </button>
+
+            <button onclick="confirmDelete({{ $agent->id }})"
+                    class="bg-white hover:bg-red-50 p-3 flex flex-col items-center justify-center transition-colors group">
+                <i class="ph-bold ph-trash text-red-600 text-xl mb-1"></i>
+                <span class="text-xs font-bold text-gray-700 uppercase">Supprimer</span>
+            </button>
+        </div>
+
+        <form action="{{ route('agents.destroy', $agent->id) }}" method="POST" id="delete-form-{{ $agent->id }}" class="hidden">
+            @csrf @method('DELETE')
+        </form>
+
+        {{-- Modal Pointage avec Alpine.js --}}
+        <template x-teleport="body">
+            <div x-show="showModal"
+                 x-cloak
+                 class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+                 style="display: none;"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0">
+
+                {{-- Backdrop --}}
+                <div @click="showModal = false"
+                     class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+                {{-- Modal Content --}}
+                <div @click.stop
+                     class="relative glass-card rounded-3xl max-w-md w-full p-8 shadow-2xl"
+                     style="max-height: 90vh; overflow-y: auto;"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+
+                    {{-- Header --}}
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-black text-gray-900">
+                            <i class="ph-bold ph-fingerprint text-cyan-600 mr-2"></i>
+                            Pointage Agent
+                        </h3>
+                        <button @click="showModal = false"
+                                type="button"
+                                class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
+                            <i class="ph-bold ph-x text-gray-500 text-2xl"></i>
+                        </button>
                     </div>
 
-                    <form action="{{ route('pointages.store') }}" method="POST">
+                    {{-- Info Agent --}}
+                    <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+                        <p class="text-sm font-black text-gray-900 flex items-center">
+                            <i class="ph-bold ph-user-circle text-blue-600 mr-2 text-lg"></i>
+                            {{ $agent->nom }} {{ $agent->prenom }}
+                        </p>
+                        <p class="text-xs text-gray-600 mt-2 flex items-center">
+                            <i class="ph-bold ph-bank text-purple-600 mr-2"></i>
+                            {{ $agent->site->nom ?? 'Non affecté' }}
+                        </p>
+                    </div>
+
+                    @if(!$agent->site_id)
+                    <div class="mb-4 p-4 bg-amber-50 rounded-xl border-2 border-amber-200">
+                        <p class="text-sm font-bold text-amber-800 flex items-center">
+                            <i class="ph-bold ph-warning text-amber-600 mr-2 text-lg"></i>
+                            Attention : Agent sans site affecté
+                        </p>
+                        <p class="text-xs text-amber-700 mt-1">
+                            Veuillez d'abord affecter un site à cet agent avant de faire un pointage.
+                        </p>
+                    </div>
+                    @endif
+
+                    {{-- Formulaire --}}
+                    <form action="{{ route('pointages.store') }}" method="POST" class="space-y-5" x-data="{ typePointage: 'absence' }">
                         @csrf
                         <input type="hidden" name="agent_id" value="{{ $agent->id }}">
-                        <input type="hidden" name="site_id" value="{{ $agent->site_id }}">
+                        @if($agent->site_id)
+                            <input type="hidden" name="site_id" value="{{ $agent->site_id }}">
+                        @endif
                         <input type="hidden" name="date_pointage" value="{{ date('Y-m-d') }}">
 
-                        <div class="modal-body py-4 px-4">
-                            <div class="mb-3">
-                                <label class="small text-uppercase fw-bold mb-2 text-muted">Nature du Pointage</label>
-                                <select name="type" class="form-select border border-2 rounded-3 py-2 text-dark fw-bold"
-                                        style="background-color: #f8f9fa;" id="typePointage{{ $agent->id }}"
-                                        onchange="togglePointageFields({{ $agent->id }})">
-                                    <option value="absence">Absence / Sanction</option>
-                                    <option value="supplementaire">H. Supplémentaire</option>
-                                </select>
+                        {{-- Type de pointage --}}
+                        <div>
+                            <label class="block text-sm font-bold text-gray-900 mb-2">
+                                <i class="ph-bold ph-list-bullets text-blue-600 mr-1"></i>
+                                Nature du Pointage
+                            </label>
+                            <select name="type"
+                                    x-model="typePointage"
+                                    class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium">
+                                <option value="absence">🚫 Absence / Sanction</option>
+                                <option value="supplementaire">⏰ Heures Supplémentaires</option>
+                            </select>
+                        </div>
+
+                        {{-- Champs pour Absence --}}
+                        <div x-show="typePointage === 'absence'"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="space-y-4">
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-900 mb-2">
+                                        <i class="ph-bold ph-money text-red-600 mr-1"></i>
+                                        Montant (F CFA)
+                                    </label>
+                                    <input type="number"
+                                           name="montant"
+                                           class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all font-medium"
+                                           placeholder="5000">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-900 mb-2">
+                                        <i class="ph-bold ph-calendar-x text-red-600 mr-1"></i>
+                                        Nb de Jours
+                                    </label>
+                                    <input type="number"
+                                           name="nb_jours"
+                                           value="1"
+                                           class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all font-medium">
+                                </div>
                             </div>
 
-                            <div id="fieldsAbsence{{ $agent->id }}">
-                                <div class="row g-2 mb-3">
-                                    <div class="col-6">
-                                        <label class="small text-uppercase fw-bold mb-1 text-muted">Montant (F CFA)</label>
-                                        <input type="number" name="montant" class="form-control bg-light border-0 py-2 text-dark fw-bold" placeholder="ex: 5000">
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="small text-uppercase fw-bold mb-1 text-muted">Nombre de Jours</label>
-                                        <input type="number" name="nb_jours" value="1" class="form-control bg-light border-0 py-2 text-dark fw-bold">
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="small text-uppercase fw-bold mb-1 text-muted">Motif de l'absence</label>
-                                    <input type="text" name="motif" class="form-control bg-light border-0 py-2 text-dark fw-bold" placeholder="URGENCE, NON JUSTIFIER, etc.">
-                                </div>
-                            </div>
-
-                            <div id="fieldsSupp{{ $agent->id }}" style="display:none;">
-                                <div class="mb-3">
-                                    <label class="small text-uppercase fw-bold mb-1 text-muted">Agent Remplacé</label>
-                                    <input type="text" name="agent_remplace" class="form-control bg-light border-0 py-2 text-dark fw-bold" placeholder="Nom de l'agent absent remplacé">
-                                </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-900 mb-2">
+                                    <i class="ph-bold ph-warning-circle text-amber-600 mr-1"></i>
+                                    Motif de l'absence
+                                </label>
+                                <input type="text"
+                                       name="motif"
+                                       class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-500 transition-all font-medium"
+                                       placeholder="Ex: URGENCE, NON JUSTIFIÉ...">
                             </div>
                         </div>
 
-                        <div class="modal-footer border-0 pb-4 px-4">
-                            <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold shadow-sm">VALIDER LE POINTAGE</button>
+                        {{-- Champs pour Heures Supplémentaires --}}
+                        <div x-show="typePointage === 'supplementaire'"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0">
+                            <label class="block text-sm font-bold text-gray-900 mb-2">
+                                <i class="ph-bold ph-user-switch text-emerald-600 mr-1"></i>
+                                Agent Remplacé
+                            </label>
+                            <select name="agent_remplace"
+                                    class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all font-medium">
+                                <option value="">-- Aucun agent remplacé --</option>
+                                @foreach($agents as $a)
+                                <option value="{{ $a->nom }} {{ $a->prenom }}">{{ $a->nom }} {{ $a->prenom }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Bouton Submit --}}
+                        <div class="pt-4">
+                            @if($agent->site_id)
+                                <button type="submit"
+                                        class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105">
+                                    <i class="ph-bold ph-check-circle mr-2 text-xl"></i>
+                                    Valider le Pointage
+                                </button>
+                            @else
+                                <a href="{{ route('agents.edit', $agent->id) }}"
+                                   class="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-lg rounded-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105 inline-flex items-center justify-center">
+                                    <i class="ph-bold ph-pencil mr-2 text-xl"></i>
+                                    Affecter un Site
+                                </a>
+                            @endif
                         </div>
                     </form>
                 </div>
             </div>
-        </div>
-        @empty
-        <div class="col-12 text-center py-5 text-white opacity-50">
-            <i class="ph ph-users-slash display-1"></i>
-            <p class="mt-3">Aucun agent trouvé.</p>
-        </div>
-        @endforelse
+        </template>
     </div>
+    @empty
+    <div class="col-span-full glass-card rounded-3xl p-12 text-center">
+        <i class="ph-bold ph-users-slash text-gray-400 text-8xl mb-4"></i>
+        <h3 class="text-2xl font-black text-gray-900 mb-2">Aucun agent trouvé</h3>
+        <p class="text-gray-600 font-medium mb-6">Commencez par ajouter votre premier agent</p>
+        <a href="{{ route('agents.create') }}"
+           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+            <i class="ph-bold ph-plus-circle mr-2"></i>
+            Ajouter un Agent
+        </a>
+    </div>
+    @endforelse
 </div>
+
+{{-- Pagination --}}
+@if(method_exists($agents, 'hasPages') && $agents->hasPages())
+<div class="mt-8 flex justify-center">
+    {{ $agents->links() }}
+</div>
+@endif
+
+@endsection
 
 @push('scripts')
 <script>
-    $(document).on('click', '.delete-btn', function() {
-        const id = $(this).data('id');
+    function confirmDelete(id) {
         Swal.fire({
             title: 'Supprimer cet Agent ?',
-            text: "Toutes ses données seront perdues.",
+            html: '<p class="text-gray-600 font-medium">Cette action est irréversible. Toutes les données seront perdues.</p>',
             icon: 'warning',
+            iconColor: '#f59e0b',
             showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            confirmButtonText: 'Supprimer',
-            cancelButtonText: 'Annuler',
-            background: '#14181c',
-            color: '#fff'
+            confirmButtonText: '<i class="ph-bold ph-trash mr-2"></i>Oui, supprimer',
+            cancelButtonText: '<i class="ph-bold ph-x mr-2"></i>Annuler',
+            background: '#ffffff',
+            color: '#111827',
+            customClass: {
+                popup: 'rounded-3xl shadow-2xl border-2 border-gray-200',
+                title: 'text-2xl font-black text-gray-900 pt-6',
+                htmlContainer: 'text-gray-600',
+                confirmButton: 'px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 mx-2',
+                cancelButton: 'px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all mx-2'
+            },
+            buttonsStyling: false,
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown animate__faster'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp animate__faster'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
-                $(`#delete-form-${id}`).submit();
+                document.getElementById(`delete-form-${id}`).submit();
             }
         });
-    });
-
-    function togglePointageFields(id) {
-        const type = document.getElementById('typePointage' + id).value;
-        const divAbsence = document.getElementById('fieldsAbsence' + id);
-        const divSupp = document.getElementById('fieldsSupp' + id);
-
-        if (type === 'absence') {
-            divAbsence.style.display = 'block';
-            divSupp.style.display = 'none';
-        } else {
-            divAbsence.style.display = 'none';
-            divSupp.style.display = 'block';
-        }
     }
 </script>
 @endpush
-
-<style>
-    /* STYLE BARRE DE RECHERCHE Z3 */
-    .search-bar-z3-mini {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 50px;
-        padding: 4px 6px 4px 20px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        max-width: 450px;
-        margin: 0 auto;
-    }
-    .search-bar-z3-mini input {
-        background: transparent !important;
-        border: none !important;
-        color: white !important;
-        box-shadow: none !important;
-        font-size: 0.8rem !important;
-    }
-    .search-bar-z3-mini input::placeholder { color: rgba(255, 255, 255, 0.4) !important; font-size: 0.8rem; }
-    .btn-cyan-search-mini {
-        background-color: #00d2ff !important;
-        color: #000 !important;
-        border-radius: 50px;
-        padding: 6px 18px;
-        font-size: 0.75rem;
-        border: none;
-    }
-
-    /* CARTES AGENTS */
-    .agent-card-wrapper { border-radius: 25px; overflow: hidden; transition: 0.3s; }
-    .agent-card-wrapper:hover { transform: translateY(-8px); }
-    .card-top { background: rgba(20, 24, 28, 0.95); backdrop-filter: blur(15px); }
-    .card-bottom { border-top: 1px solid rgba(0,0,0,0.05); }
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
-    .bg-success { background-color: #28a745 !important; color: #28a745; }
-    .bg-danger { background-color: #dc3545 !important; color: #dc3545; }
-    .avatar-box { background: rgba(0, 210, 255, 0.1); border-radius: 12px; padding: 4px; }
-
-    .action-link { font-size: 0.6rem !important; letter-spacing: 0.5px; }
-    .action-link i { font-size: 1.1rem; }
-
-    .btn-cyan-pointer {
-        background-color: #00d2ff !important;
-        border: none;
-        font-size: 0.6rem;
-        letter-spacing: 0.5px;
-        padding: 8px 2px;
-    }
-    .btn-cyan-pointer:hover {
-        background-color: #00b8e6 !important;
-        transform: scale(1.05);
-        transition: 0.3s;
-    }
-
-    .border-end { border-right: 1px solid rgba(0,0,0,0.08) !important; }
-    .border-start { border-left: 1px solid rgba(0,0,0,0.08) !important; }
-
-    .modal-content input, .modal-content select { color: #000 !important; }
-</style>
-@endsection

@@ -1,73 +1,153 @@
 @extends('layouts.admin')
 
+@section('content_header_title', 'Modifier Agent')
+@section('content_header_subtitle', 'Mise à jour des informations de l\'agent')
+
 @section('content')
-<div class="d-flex justify-content-center align-items-center py-5">
-    {{-- Conteneur Glassmorphism Premium --}}
-    <div class="glass-card p-5 shadow-lg" style="background: rgba(20, 24, 28, 0.95); backdrop-filter: blur(25px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 600px; color: white;">
+<div class="max-w-3xl mx-auto">
+    <div class="glass-card rounded-3xl p-8 lg:p-10" x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)">
+        <div x-show="show"
+             x-transition:enter="transition ease-out duration-500"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
 
-        <div class="text-center mb-5">
-            <div class="icon-circle bg-warning d-inline-flex p-3 rounded-circle mb-3 shadow-glow" style="box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);">
-                <i class="ph ph-user-focus h1 mb-0 text-dark"></i>
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <i class="ph-bold ph-user-focus text-white text-4xl"></i>
+                </div>
+                <h2 class="text-3xl font-black text-gray-900 mb-2">Mise à jour Agent</h2>
+                <p class="text-gray-600 font-medium">Modification des informations de l'agent</p>
             </div>
-            <h2 class="fw-bold text-shadow">Mise à jour Agent</h2>
-            <p class="text-white-50 small">Modification des informations de l'agent pour le COS</p>
+
+            <!-- Form -->
+            <form action="{{ route('agents.update', $agent->id) }}" method="POST" class="space-y-6">
+                @csrf
+                @method('PUT')
+
+                <!-- Nom & Prénom -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="nom" class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-user mr-1 text-blue-600"></i>
+                            Nom
+                        </label>
+                        <input type="text"
+                               id="nom"
+                               name="nom"
+                               value="{{ old('nom', $agent->nom) }}"
+                               required
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
+                               placeholder="Ex: DIOP">
+                        @error('nom')
+                            <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                                <i class="ph-bold ph-warning-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="prenom" class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-user mr-1 text-blue-600"></i>
+                            Prénom
+                        </label>
+                        <input type="text"
+                               id="prenom"
+                               name="prenom"
+                               value="{{ old('prenom', $agent->prenom) }}"
+                               required
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
+                               placeholder="Ex: Mohamed">
+                        @error('prenom')
+                            <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                                <i class="ph-bold ph-warning-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Téléphone -->
+                <div>
+                    <label for="telephone" class="block text-sm font-bold text-gray-900 mb-2">
+                        <i class="ph-bold ph-phone mr-1 text-emerald-600"></i>
+                        Numéro de Téléphone
+                    </label>
+                    <input type="text"
+                           id="telephone"
+                           name="telephone"
+                           value="{{ old('telephone', $agent->telephone) }}"
+                           class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all font-medium"
+                           placeholder="Ex: 77 000 00 00">
+                    @error('telephone')
+                        <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                            <i class="ph-bold ph-warning-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Statut -->
+                <div>
+                    <label for="statut" class="block text-sm font-bold text-gray-900 mb-2">
+                        <i class="ph-bold ph-check-circle mr-1 text-amber-600"></i>
+                        Statut Actuel
+                    </label>
+                    <select id="statut"
+                            name="statut"
+                            class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-500 transition-all font-medium">
+                        <option value="Présent" {{ $agent->statut == 'Présent' ? 'selected' : '' }}>✅ Présent</option>
+                        <option value="Absent" {{ $agent->statut == 'Absent' ? 'selected' : '' }}>❌ Absent</option>
+                        <option value="Repos" {{ $agent->statut == 'Repos' ? 'selected' : '' }}>😴 Repos</option>
+                        <option value="Congé" {{ $agent->statut == 'Congé' ? 'selected' : '' }}>🏖️ Congé</option>
+                    </select>
+                    @error('statut')
+                        <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                            <i class="ph-bold ph-warning-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Site d'Affectation -->
+                <div>
+                    <label for="site_id" class="block text-sm font-bold text-gray-900 mb-2">
+                        <i class="ph-bold ph-bank mr-1 text-purple-600"></i>
+                        Site d'Affectation
+                    </label>
+                    <select id="site_id"
+                            name="site_id"
+                            class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all font-medium">
+                        @foreach($sites as $site)
+                            <option value="{{ $site->id }}" {{ $agent->site_id == $site->id ? 'selected' : '' }}>
+                                {{ $site->nom }} ({{ $site->secteur }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('site_id')
+                        <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                            <i class="ph-bold ph-warning-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-between pt-6 border-t-2 border-gray-200">
+                    <a href="{{ route('agents.index') }}"
+                       class="inline-flex items-center px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all">
+                        <i class="ph-bold ph-arrow-left mr-2"></i>
+                        Annuler
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105">
+                        <i class="ph-bold ph-floppy-disk mr-2"></i>
+                        Enregistrer les Modifications
+                    </button>
+                </div>
+            </form>
         </div>
-
-        {{-- Formulaire avec route ID explicite et méthode PUT --}}
-        <form action="{{ route('agents.update', $agent->id) }}" method="POST" class="row g-4">
-            @csrf
-            @method('PUT')
-
-            <div class="col-md-6">
-                <label class="small text-uppercase opacity-75 fw-bold mb-2">Nom</label>
-                <input type="text" name="nom" value="{{ old('nom', $agent->nom) }}" class="form-control bg-white-10 text-white border-0 rounded-3 py-3 px-4 shadow-sm" required>
-            </div>
-
-            <div class="col-md-6">
-                <label class="small text-uppercase opacity-75 fw-bold mb-2">Prénom</label>
-                <input type="text" name="prenom" value="{{ old('prenom', $agent->prenom) }}" class="form-control bg-white-10 text-white border-0 rounded-3 py-3 px-4 shadow-sm" required>
-            </div>
-
-            <div class="col-md-12">
-                <label class="small text-uppercase opacity-75 fw-bold mb-2">Statut Actuel</label>
-                <select name="statut" class="form-select bg-white-10 text-white border-0 rounded-3 py-3 px-4 shadow-sm">
-                    <option value="Présent" {{ $agent->statut == 'Présent' ? 'selected' : '' }} class="text-dark">Présent</option>
-                    <option value="Absent" {{ $agent->statut == 'Absent' ? 'selected' : '' }} class="text-dark">Absent</option>
-                    <option value="Repos" {{ $agent->statut == 'Repos' ? 'selected' : '' }} class="text-dark">Repos</option>
-                </select>
-            </div>
-            <div class="col-md-12">
-                <label class="small text-uppercase opacity-75 fw-bold mb-2 text-white">Numéro de Téléphone</label>
-                <input type="text" name="telephone" value="{{ old('telephone', $agent->telephone) }}" class="form-control bg-white-10 text-white border-0 rounded-3 py-3 px-4">
-            </div>
-
-            <div class="col-md-12">
-                <label class="small text-uppercase opacity-75 fw-bold mb-2">Site d'Affectation</label>
-                <select name="site_id" class="form-select bg-white-10 text-white border-0 rounded-3 py-3 px-4 shadow-sm">
-                    @foreach($sites as $site)
-                    <option value="{{ $site->id }}" {{ $agent->site_id == $site->id ? 'selected' : '' }} class="text-dark">
-                        {{ $site->nom }} ({{ $site->secteur }})
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-12 d-flex justify-content-between align-items-center mt-5">
-                <a href="{{ route('agents.index') }}" class="text-white-50 text-decoration-none fw-bold small">
-                    <i class="ph ph-arrow-left me-1"></i> ANNULER
-                </a>
-                <button type="submit" class="btn btn-warning rounded-pill px-5 py-3 shadow-glow fw-bold text-uppercase border-0 text-dark">
-                    Enregistrer les modifications
-                </button>
-            </div>
-        </form>
     </div>
 </div>
-
-<style>
-    .bg-white-10 { background: rgba(255,255,255,0.08); transition: 0.3s; }
-    .bg-white-10:focus { background: rgba(255,255,255,0.15); box-shadow: 0 0 10px rgba(0, 210, 255, 0.2) !important; color: white; }
-    .shadow-glow { box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3); }
-    .form-select option { background: #1a1e21; color: white; }
-</style>
 @endsection

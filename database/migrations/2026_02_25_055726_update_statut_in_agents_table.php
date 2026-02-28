@@ -9,8 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // On désactive temporairement le mode strict pour éviter l'erreur "Data truncated"
-        DB::statement('SET SESSION sql_mode = ""');
+        // On désactive temporairement le mode strict pour MySQL uniquement
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('SET SESSION sql_mode = ""');
+        }
 
         Schema::table('agents', function (Blueprint $table) {
             // On change ENUM en STRING (VARCHAR 255)

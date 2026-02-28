@@ -1,245 +1,427 @@
 @extends('layouts.admin')
 
+@section('content_header_title', $search ? 'Historique Complet' : ($type == 'absence' ? 'Absences & Sanctions' : 'Heures Supplémentaires'))
+@section('content_header_subtitle', 'Gestion des pointages et calculs de paie')
+
 @section('content')
-<div class="container-fluid py-4">
-    {{-- BARRE DE TITRE ET RECHERCHE --}}
-    <div class="glass-card p-4 mb-3 border-0 shadow-lg" style="background: rgba(20, 24, 28, 0.85); backdrop-filter: blur(15px); border-radius: 25px;">
-        <div class="row g-3 align-items-center">
-            <div class="col-12 col-xl-3">
-                <h2 class="fw-bold text-white mb-0 text-nowrap">
-                    <i class="ph ph-list-bullets me-2 text-info"></i>
+
+{{-- Header avec Actions et Recherche --}}
+<div class="glass-card rounded-2xl p-6 mb-6">
+    <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
+        {{-- Titre --}}
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br {{ $type == 'absence' ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600' }} rounded-xl flex items-center justify-center shadow-lg">
+                <i class="ph-bold {{ $type == 'absence' ? 'ph-warning-octagon' : 'ph-clock-afternoon' }} text-white text-2xl"></i>
+            </div>
+            <div>
+                <h3 class="text-2xl font-black text-gray-900">
                     {{ $search ? 'Historique' : ($type == 'absence' ? 'Sanctions' : 'Suppléments') }}
-                </h2>
+                </h3>
+                <p class="text-sm text-gray-600 font-medium">{{ $pointages->count() }} enregistrement(s)</p>
             </div>
+        </div>
 
-            <div class="col-12 col-md-6 col-xl-4">
-                <form action="{{ route('pointages.index') }}" method="GET" class="d-flex bg-white-10 rounded-pill p-1 shadow-sm">
-                    <input type="hidden" name="type" value="{{ $type }}">
-                    <input type="text" name="search" value="{{ $search ?? '' }}"
-                           class="form-control border-0 bg-transparent text-white px-3"
-                           placeholder="Rechercher un agent...">
-                    <button type="submit" class="btn btn-info rounded-pill px-3 fw-bold">
-                        <i class="ph ph-magnifying-glass"></i>
-                    </button>
+        {{-- Actions --}}
+        <div class="flex items-center gap-3 w-full lg:w-auto flex-wrap">
+            {{-- Recherche --}}
+            <form action="{{ route('pointages.index') }}" method="GET" class="flex-1 lg:flex-initial flex items-center gap-2">
+                <input type="hidden" name="type" value="{{ $type }}">
+                <div class="relative flex-1 lg:flex-initial">
+                    <input type="text"
+                           name="search"
+                           value="{{ $search ?? '' }}"
+                           placeholder="Rechercher un agent..."
+                           class="w-full lg:w-64 pl-10 pr-10 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-{{ $type == 'absence' ? 'red' : 'green' }}-100 focus:border-{{ $type == 'absence' ? 'red' : 'green' }}-500 transition-all font-medium text-sm">
+                    <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                     @if($search)
-                    <a href="{{ route('pointages.index', ['type' => $type]) }}" class="btn btn-link text-white-50 small text-decoration-none d-flex align-items-center px-2">Effacer</a>
-                    @endif
-                </form>
-            </div>
-
-            <div class="col-12 col-md-6 col-xl-5">
-                <div class="d-flex justify-content-md-end align-items-center gap-2 flex-wrap">
-                    <button class="btn btn-primary rounded-pill px-3 fw-bold shadow-sm d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalSaisieDirecte">
-                        <i class="ph ph-plus-circle me-1"></i> SAISIR
-                    </button>
-                    <a href="{{ route('pointages.export', ['type' => $type, 'search' => $search, 'month' => request('month'), 'year' => request('year')]) }}" class="btn btn-success rounded-pill px-3 fw-bold shadow-sm d-flex align-items-center">
-                        <i class="ph ph-file-xls me-1"></i> EXCEL
+                    <a href="{{ route('pointages.index', ['type' => $type]) }}"
+                       class="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                       title="Effacer la recherche">
+                        <i class="ph-bold ph-x text-gray-500"></i>
                     </a>
-
-                    <div class="btn-group rounded-pill overflow-hidden border border-white-10 shadow-sm bg-dark">
-                        <a href="{{ route('pointages.index', ['type' => 'absence']) }}" class="btn btn-{{ $type == 'absence' ? 'info' : 'dark' }} btn-sm px-3 fw-bold">Absences</a>
-                        <a href="{{ route('pointages.index', ['type' => 'supplementaire']) }}" class="btn btn-{{ $type == 'supplementaire' ? 'info' : 'dark' }} btn-sm px-3 fw-bold">Suppléments</a>
-                    </div>
+                    @endif
                 </div>
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 text-sm whitespace-nowrap">
+                    <i class="ph-bold ph-magnifying-glass mr-2"></i>
+                    Rechercher
+                </button>
+            </form>
+
+            {{-- Bouton Saisir --}}
+            <button x-data @click="$dispatch('open-modal')"
+                    class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 text-sm">
+                <i class="ph-bold ph-plus-circle mr-2"></i>
+                Saisir
+            </button>
+
+            {{-- Export Excel --}}
+            <a href="{{ route('pointages.export', ['type' => $type, 'search' => $search, 'month' => request('month'), 'year' => request('year')]) }}"
+               class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 text-sm">
+                <i class="ph-bold ph-file-xls mr-2"></i>
+                Excel
+            </a>
+
+            {{-- Toggle Absence/Supplément --}}
+            <div class="inline-flex rounded-xl overflow-hidden shadow-lg border-2 border-gray-200">
+                <a href="{{ route('pointages.index', ['type' => 'absence']) }}"
+                   class="px-4 py-2.5 font-bold text-sm transition-all {{ $type == 'absence' ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                    Absences
+                </a>
+                <a href="{{ route('pointages.index', ['type' => 'supplementaire']) }}"
+                   class="px-4 py-2.5 font-bold text-sm transition-all {{ $type == 'supplementaire' ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
+                    Suppléments
+                </a>
             </div>
         </div>
     </div>
+</div>
 
-    {{-- BARRE DE FILTRAGE GÉNÉRALISÉE (MOIS ET ANNÉE) --}}
-    <div class="glass-card p-3 mb-4 border-0 shadow-sm" style="background: rgba(255, 255, 255, 0.05); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1) !important;">
-        <form action="{{ route('pointages.index') }}" method="GET" class="row g-2 align-items-center">
-            <input type="hidden" name="type" value="{{ $type }}">
-            <input type="hidden" name="search" value="{{ $search }}">
+{{-- Filtres Mois/Année --}}
+<div class="glass-card rounded-2xl p-5 mb-6">
+    <form action="{{ route('pointages.index') }}" method="GET" class="flex flex-col md:flex-row items-end gap-4">
+        <input type="hidden" name="type" value="{{ $type }}">
+        <input type="hidden" name="search" value="{{ $search }}">
 
-            <div class="col-md-4">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-transparent border-0 text-white-50 small">MOIS :</span>
-                    <select name="month" class="form-select bg-dark text-white border-0 rounded-3">
-                        <option value="">Tous les mois (Général)</option>
-                        @foreach(range(1, 12) as $m)
-                        @php $mVal = sprintf('%02d', $m); @endphp
-                        <option value="{{ $mVal }}" {{ request('month') == $mVal ? 'selected' : '' }}>
-                        {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
+        {{-- Filtre Mois --}}
+        <div class="flex-1">
+            <label class="block text-sm font-bold text-gray-700 mb-2">
+                <i class="ph-bold ph-calendar-blank text-purple-600 mr-1"></i>
+                Mois
+            </label>
+            <select name="month"
+                    class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all">
+                <option value="">Tous les mois (Vue globale)</option>
+                @foreach(range(1, 12) as $m)
+                @php $mVal = sprintf('%02d', $m); @endphp
+                <option value="{{ $mVal }}" {{ request('month') == $mVal ? 'selected' : '' }}>
+                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                </option>
+                @endforeach
+            </select>
+        </div>
 
-            <div class="col-md-3">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-transparent border-0 text-white-50 small">ANNÉE :</span>
-                    <select name="year" class="form-select bg-dark text-white border-0 rounded-3">
-                        <option value="">Toutes les années</option>
-                        @php $startYear = 2024; $currentYear = date('Y'); @endphp
-                        @for($y = $currentYear; $y >= $startYear; $y--)
-                        <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
-                        @endfor
-                    </select>
-                </div>
-            </div>
+        {{-- Filtre Année --}}
+        <div class="flex-1">
+            <label class="block text-sm font-bold text-gray-700 mb-2">
+                <i class="ph-bold ph-calendar text-indigo-600 mr-1"></i>
+                Année
+            </label>
+            <select name="year"
+                    class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all">
+                <option value="">Toutes les années</option>
+                @foreach($years as $y)
+                <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endforeach
+            </select>
+        </div>
 
-            <div class="col-md-5 d-flex gap-2">
-                <button type="submit" class="btn btn-info btn-sm rounded-pill px-4 fw-bold w-100">
-                    <i class="ph ph-funnel me-1"></i> APPLIQUER LE FILTRE
-                </button>
-                <a href="{{ route('pointages.index', ['type' => $type]) }}" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold" title="Vue Globale">
-                    <i class="ph ph-arrow-counter-clockwise"></i>
-                </a>
-            </div>
-        </form>
+        {{-- Boutons --}}
+        <div class="flex items-center gap-2 flex-1 md:flex-initial">
+            <button type="submit"
+                    class="flex-1 md:flex-initial inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                <i class="ph-bold ph-funnel mr-2"></i>
+                Filtrer
+            </button>
+            <a href="{{ route('pointages.index', ['type' => $type]) }}"
+               class="inline-flex items-center justify-center p-3 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all"
+               title="Réinitialiser">
+                <i class="ph-bold ph-arrow-counter-clockwise text-xl"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+{{-- Tableau des Pointages --}}
+<div class="glass-card rounded-2xl overflow-hidden shadow-xl">
+    {{-- Header du tableau --}}
+    <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-4">
+        <h4 class="text-lg font-black text-white flex items-center">
+            <i class="ph-bold ph-table text-{{ $type == 'absence' ? 'red' : 'green' }}-400 mr-2 text-2xl"></i>
+            Détails des Pointages
+        </h4>
     </div>
 
-    {{-- TABLEAU DES RÉSULTATS --}}
-    <div class="glass-card border-0 shadow-lg overflow-hidden" style="background: rgba(255, 255, 255, 0.95); border-radius: 25px;">
-        <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.75rem;">
-                <thead class="bg-dark text-white text-uppercase small fw-bold">
-                <tr>
-                    <th class="ps-3 py-3" style="min-width: 120px;">Agent</th>
-                    <th class="py-3">Site</th>
-                    <th class="py-3 text-center">Base (AS)</th>
-                    <th class="py-3 text-center">Modif. Période</th>
-                    <th class="py-3 text-center text-info" style="background: rgba(0, 210, 255, 0.05);">Net à Payer</th>
-                    <th class="py-3 text-center">Date</th>
-                    <th class="py-3">Motif / Remplacé</th>
-                    <th class="pe-3 text-center" style="min-width: 100px;">Action</th>
+    {{-- Table --}}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-100 text-gray-700">
+                <tr class="text-center font-black uppercase">
+                    <th class="px-4 py-3 text-left border-r border-gray-200">Agent</th>
+                    <th class="px-3 py-3 border-r border-gray-200">Site</th>
+                    <th class="px-3 py-3 border-r border-gray-200">Salaire Base</th>
+                    <th class="px-3 py-3 border-r border-gray-200">Modification</th>
+                    <th class="px-3 py-3 bg-blue-50 border-r border-blue-200 text-blue-700">Net à Payer</th>
+                    <th class="px-3 py-3 border-r border-gray-200">Date</th>
+                    <th class="px-3 py-3 border-r border-gray-200">{{ $type == 'absence' ? 'Motif' : 'Agent Remplacé' }}</th>
+                    <th class="px-4 py-3">Actions</th>
                 </tr>
-                </thead>
-                <tbody class="text-dark fw-medium">
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($pointages as $p)
                 @php
-                $salaireBase = $p->agent->salaire_base ?? 0;
-                $sanctionsMois = $p->agent->total_sanctions ?? 0;
-                $supplementsMois = $p->agent->total_supplements ?? 0;
-                // Le calcul s'adapte automatiquement : si mois choisi = net mensuel, si "tous" = net historique
+                // Utiliser le salaire enregistré dans le pointage (historique) ou le salaire actuel de l'agent
+                $salaireBase = $p->salaire_base ?? $p->agent->salaire_base ?? 0;
+
+                // Calculer les totaux du mois de ce pointage pour cet agent
+                $moisPointage = \Carbon\Carbon::parse($p->date_pointage)->month;
+                $anneePointage = \Carbon\Carbon::parse($p->date_pointage)->year;
+
+                $sanctionsMois = $p->agent->pointages()
+                    ->where('type', 'absence')
+                    ->whereMonth('date_pointage', $moisPointage)
+                    ->whereYear('date_pointage', $anneePointage)
+                    ->sum('montant');
+
+                $supplementsMois = $p->agent->pointages()
+                    ->where('type', 'supplementaire')
+                    ->whereMonth('date_pointage', $moisPointage)
+                    ->whereYear('date_pointage', $anneePointage)
+                    ->sum('montant');
+
+                // Net à payer : Salaire de base - sanctions + suppléments du mois
                 $netCalculé = $salaireBase - $sanctionsMois + $supplementsMois;
                 @endphp
-                <tr class="border-bottom">
-                    <td class="ps-3 fw-bold text-truncate" style="max-width: 130px;">{{ $p->agent->nom }} {{ $p->agent->prenom }}</td>
-                    <td><span class="badge bg-light text-dark border px-2 rounded-pill fw-bold" style="font-size: 0.65rem;">{{ Str::limit($p->site->nom ?? 'N/A', 10) }}</span></td>
-                    <td class="text-center text-muted fw-bold">{{ number_format($salaireBase, 0, ',', ' ') }}</td>
-                    <td class="text-center">
-                        <span class="fw-bold text-{{ $p->type == 'absence' ? 'danger' : 'success' }}">
-                            {{ $p->type == 'absence' ? '-' : '+' }}{{ number_format($p->montant, 0, ',', ' ') }}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-bold text-gray-900 border-r border-gray-200">
+                        {{ $p->agent->nom }} {{ $p->agent->prenom }}
+                    </td>
+                    <td class="px-3 py-3 text-center border-r border-gray-200">
+                        <span class="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
+                            {{ Str::limit($p->site->nom ?? 'N/A', 12) }}
                         </span>
                     </td>
-                    <td class="text-center fw-bold text-primary" style="background: rgba(0, 210, 255, 0.08);">
+                    <td class="px-3 py-3 text-center font-bold text-gray-600 border-r border-gray-200">
+                        {{ number_format($salaireBase, 0, ',', ' ') }} F
+                    </td>
+                    <td class="px-3 py-3 text-center border-r border-gray-200">
+                        <span class="font-black text-{{ $p->type == 'absence' ? 'red' : 'green' }}-600">
+                            {{ $p->type == 'absence' ? '- ' : '+ ' }}{{ number_format($p->montant, 0, ',', ' ') }} F
+                        </span>
+                    </td>
+                    <td class="px-3 py-3 text-center font-black text-blue-700 bg-blue-50 border-r border-blue-200">
                         {{ number_format($netCalculé, 0, ',', ' ') }} F
                     </td>
-                    <td class="text-center">{{ \Carbon\Carbon::parse($p->date_pointage)->format('d/m/y') }}</td>
-                    <td class="small text-truncate" style="max-width: 150px;">
+                    <td class="px-3 py-3 text-center text-gray-700 font-medium border-r border-gray-200">
+                        {{ \Carbon\Carbon::parse($p->date_pointage)->format('d/m/Y') }}
+                    </td>
+                    <td class="px-3 py-3 text-gray-600 italic border-r border-gray-200">
                         {{ $p->type == 'absence' ? ($p->motif ?? 'N/A') : ($p->agent_remplace ?? 'N/A') }}
                     </td>
-                    <td class="pe-3 text-center">
-                        <div class="d-flex justify-content-center gap-1">
-                            <a href="{{ route('pointages.edit', $p->id) }}" class="btn btn-xs btn-info rounded-pill px-2 shadow-sm"><i class="ph ph-pencil-simple"></i></a>
-
-                            <form action="{{ route('pointages.destroy', $p->id) }}" method="POST" id="delete-form-{{ $p->id }}" class="d-none">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center justify-center gap-2">
+                            <a href="{{ route('pointages.edit', $p->id) }}"
+                               class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors">
+                                <i class="ph-bold ph-pencil text-lg"></i>
+                            </a>
+                            <button type="button"
+                                    onclick="confirmDelete({{ $p->id }})"
+                                    class="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors">
+                                <i class="ph-bold ph-trash text-lg"></i>
+                            </button>
+                            <form action="{{ route('pointages.destroy', $p->id) }}"
+                                  method="POST"
+                                  id="delete-form-{{ $p->id }}"
+                                  class="hidden">
                                 @csrf @method('DELETE')
                             </form>
-                            <button type="button" class="btn btn-xs btn-outline-danger rounded-pill px-2 shadow-sm delete-btn" data-id="{{ $p->id }}">
-                                <i class="ph ph-trash"></i>
-                            </button>
                         </div>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center py-5 text-muted">Aucun enregistrement trouvé pour cette sélection.</td></tr>
+                <tr>
+                    <td colspan="8" class="px-6 py-12 text-center">
+                        <i class="ph-bold ph-folder-open text-gray-400 text-6xl mb-4"></i>
+                        <p class="text-gray-600 font-medium">Aucun enregistrement trouvé pour cette sélection.</p>
+                    </td>
+                </tr>
                 @endforelse
-                </tbody>
-            </table>
-        </div>
+            </tbody>
+        </table>
     </div>
 </div>
 
-{{-- MODALE DE SAISIE --}}
-<div class="modal fade" id="modalSaisieDirecte" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg text-dark" style="border-radius: 25px;">
-            <div class="modal-header border-0 pt-4 px-4">
-                <h5 class="modal-title fw-bold">Saisie : {{ $type == 'absence' ? 'Sanction' : 'Supplément' }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('pointages.store') }}" method="POST">
-                @csrf
-                <input type="hidden" name="type" value="{{ $type }}">
-                <div class="modal-body px-4">
-                    <div class="mb-3">
-                        <label class="small text-uppercase fw-bold text-muted mb-2 d-block">Sélectionner l'Agent</label>
-                        <select name="agent_id" id="agent_id_select" class="form-select border-2 fw-bold" required>
-                            <option value="">Choisir un agent...</option>
+{{-- Modal Alpine.js --}}
+<div x-data="{ showModal: false, selectedSalaire: 0 }" @open-modal.window="showModal = true">
+    <template x-teleport="body">
+        <div x-show="showModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="showModal = false"
+             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div @click.stop
+                 x-show="showModal"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="glass-card rounded-3xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+
+                {{-- Header --}}
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-black text-gray-900">
+                        <i class="ph-bold ph-{{ $type == 'absence' ? 'warning-octagon' : 'clock-afternoon' }} text-{{ $type == 'absence' ? 'red' : 'green' }}-600 mr-2"></i>
+                        Saisie : {{ $type == 'absence' ? 'Sanction' : 'Supplément' }}
+                    </h3>
+                    <button @click="showModal = false"
+                            type="button"
+                            class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
+                        <i class="ph-bold ph-x text-gray-500 text-2xl"></i>
+                    </button>
+                </div>
+
+                {{-- Form --}}
+                <form action="{{ route('pointages.store') }}" method="POST" class="space-y-5">
+                    @csrf
+                    <input type="hidden" name="type" value="{{ $type }}">
+
+                    {{-- Agent --}}
+                    <div>
+                        <label class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-user-circle text-blue-600 mr-1"></i>
+                            Sélectionner l'Agent
+                        </label>
+                        <select name="agent_id"
+                                @change="selectedSalaire = $el.options[$el.selectedIndex].dataset.salaire"
+                                class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all"
+                                required>
+                            <option value="">-- Choisir un agent --</option>
                             @foreach(\App\Models\Agent::orderBy('nom')->get() as $agent)
-                            <option value="{{ $agent->id }}" data-salaire="{{ $agent->salaire_base }}">{{ $agent->nom }} {{ $agent->prenom }}</option>
+                            <option value="{{ $agent->id }}" data-salaire="{{ $agent->salaire_base ?? 0 }}">
+                                {{ $agent->nom }} {{ $agent->prenom }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="small text-uppercase fw-bold text-muted mb-1 d-block">Salaire de Base (Contrat)</label>
-                        <input type="number" name="salaire_base" id="salaire_base_input" class="form-control fw-bold text-primary" required>
+
+                    {{-- Salaire Base --}}
+                    <div>
+                        <label class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-currency-circle-dollar text-purple-600 mr-1"></i>
+                            Salaire de Base (F CFA)
+                        </label>
+                        <input type="number"
+                               name="salaire_base"
+                               x-model="selectedSalaire"
+                               placeholder="Saisir le salaire de base"
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-purple-700 placeholder-gray-400 font-black focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all"
+                               required>
                     </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="small text-uppercase fw-bold text-muted mb-1 d-block">Date</label>
-                            <input type="date" name="date_pointage" class="form-control fw-bold" value="{{ date('Y-m-d') }}" required>
+
+                    {{-- Date & Montant --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-900 mb-2">
+                                <i class="ph-bold ph-calendar text-indigo-600 mr-1"></i>
+                                Date du Pointage
+                            </label>
+                            <input type="date"
+                                   name="date_pointage"
+                                   value="{{ date('Y-m-d') }}"
+                                   class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all"
+                                   required>
                         </div>
-                        <div class="col-6">
-                            <label class="small text-uppercase fw-bold text-muted mb-1 d-block">Montant (F CFA)</label>
-                            <input type="number" name="montant" class="form-control fw-bold" value="{{ $type == 'absence' ? '' : 5000 }}" required>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-900 mb-2">
+                                <i class="ph-bold ph-money text-{{ $type == 'absence' ? 'red' : 'green' }}-600 mr-1"></i>
+                                Montant (F CFA)
+                            </label>
+                            <input type="number"
+                                   name="montant"
+                                   value="{{ $type == 'absence' ? '' : 5000 }}"
+                                   class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-4 focus:ring-{{ $type == 'absence' ? 'red' : 'green' }}-100 focus:border-{{ $type == 'absence' ? 'red' : 'green' }}-500 transition-all"
+                                   required>
                         </div>
                     </div>
+
+                    {{-- Motif ou Agent Remplacé --}}
                     @if($type == 'absence')
-                    <div class="mb-3">
-                        <label class="small text-uppercase fw-bold text-muted mb-1 d-block">Motif</label>
-                        <input type="text" name="motif" class="form-control" placeholder="Ex: Retard, Abandon...">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-note-pencil text-amber-600 mr-1"></i>
+                            Motif de l'absence
+                        </label>
+                        <input type="text"
+                               name="motif"
+                               placeholder="Ex: Retard, Abandon de poste..."
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 font-medium focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-500 transition-all">
                     </div>
                     @else
-                    <div class="mb-3">
-                        <label class="small text-uppercase fw-bold text-muted mb-1 d-block">Agent Remplacé</label>
-                        <input type="text" name="agent_remplace" class="form-control" placeholder="Nom du remplaçant">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-arrows-left-right text-emerald-600 mr-1"></i>
+                            Agent Remplacé
+                        </label>
+                        <select name="agent_remplace"
+                                class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all">
+                            <option value="">-- Aucun agent remplacé --</option>
+                            @foreach(\App\Models\Agent::orderBy('nom')->orderBy('prenom')->get() as $agent)
+                            <option value="{{ $agent->nom }} {{ $agent->prenom }}">{{ $agent->nom }} {{ $agent->prenom }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     @endif
-                </div>
-                <div class="modal-footer border-0 pb-4 px-4">
-                    <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold shadow">ENREGISTRER</button>
-                </div>
-            </form>
+
+                    {{-- Actions --}}
+                    <div class="flex items-center justify-between pt-6 border-t-2 border-gray-200">
+                        <button type="button"
+                                @click="showModal = false"
+                                class="inline-flex items-center px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all">
+                            <i class="ph-bold ph-x mr-2"></i>
+                            Annuler
+                        </button>
+                        <button type="submit"
+                                class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-{{ $type == 'absence' ? 'red' : 'green' }}-500 to-{{ $type == 'absence' ? 'red' : 'green' }}-600 hover:from-{{ $type == 'absence' ? 'red' : 'green' }}-600 hover:to-{{ $type == 'absence' ? 'red' : 'green' }}-700 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105">
+                            <i class="ph-bold ph-floppy-disk mr-2"></i>
+                            Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
+    </template>
 </div>
+
+@endsection
 
 @push('scripts')
 <script>
-    $(document).on('click', '.delete-btn', function() {
-        const id = $(this).data('id');
+    function confirmDelete(id) {
         Swal.fire({
-            title: 'Confirmation',
-            text: "Supprimer ce pointage ?",
+            title: 'Supprimer ce Pointage ?',
+            html: '<p class="text-gray-600 font-medium">Cette action est irréversible. Le pointage sera définitivement supprimé.</p>',
             icon: 'warning',
+            iconColor: '#f59e0b',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Supprimer',
-            background: '#1a1a1a',
-            color: '#fff'
+            confirmButtonText: '<i class="ph-bold ph-trash mr-2"></i>Oui, supprimer',
+            cancelButtonText: '<i class="ph-bold ph-x mr-2"></i>Annuler',
+            background: '#ffffff',
+            color: '#111827',
+            customClass: {
+                popup: 'rounded-3xl shadow-2xl border-2 border-gray-200',
+                title: 'text-2xl font-black text-gray-900 pt-6',
+                htmlContainer: 'text-gray-600',
+                confirmButton: 'px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 mx-2',
+                cancelButton: 'px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all mx-2'
+            },
+            buttonsStyling: false,
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown animate__faster'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp animate__faster'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
-                $(`#delete-form-${id}`).submit();
+                document.getElementById('delete-form-' + id).submit();
             }
         });
-    });
-
-    document.getElementById('agent_id_select').addEventListener('change', function() {
-        let selectedOption = this.options[this.selectedIndex];
-        let salaire = selectedOption.getAttribute('data-salaire');
-        document.getElementById('salaire_base_input').value = salaire ? salaire : 0;
-    });
+    }
 </script>
 @endpush
-
-<style>
-    .bg-white-10 { background: rgba(255, 255, 255, 0.1); }
-    .btn-xs { padding: 2px 8px; font-size: 0.75rem; }
-    .table td, .table th { padding: 0.6rem 0.4rem !important; }
-    .form-select.bg-dark:focus { background-color: #1a1a1a; color: white; border: 1px solid #00d2ff; }
-</style>
-@endsection

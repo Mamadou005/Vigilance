@@ -1,74 +1,189 @@
 @extends('layouts.admin')
 
+@section('content_header_title', 'Modifier Alerte')
+@section('content_header_subtitle', 'Mise à jour du rapport d\'incident')
+
 @section('content')
-<div class="d-flex justify-content-center align-items-center py-5">
-    {{-- Largeur augmentée à 850px pour accueillir tous les champs confortablement --}}
-    <div class="glass-card p-5 shadow-lg" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(25px); border-radius: 45px; border: 1px solid rgba(255,255,255,0.2); width: 100%; max-width: 850px; color: white;">
+<div class="max-w-4xl mx-auto">
+    <div class="glass-card rounded-3xl p-8 lg:p-10" x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)">
+        <div x-show="show"
+             x-transition:enter="transition ease-out duration-500"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
 
-        <div class="text-center mb-4">
-            <i class="ph ph-note-pencil h1 text-warning"></i>
-            <h2 class="fw-bold text-shadow mt-2">Mise à jour Alerte</h2>
-            <p class="small text-warning text-uppercase fw-bold">{{ $alerte->site->nom ?? 'Site Inconnu' }} - {{ $alerte->type_incident }}</p>
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <i class="ph-bold ph-note-pencil text-white text-4xl"></i>
+                </div>
+                <h2 class="text-3xl font-black text-gray-900 mb-2">Mise à jour Alerte</h2>
+                <p class="text-gray-600 font-medium">{{ $alerte->site->nom ?? 'Site Inconnu' }} - {{ $alerte->type_incident }}</p>
+            </div>
+
+            <!-- Form -->
+            <form action="{{ route('alertes.update', $alerte->id) }}" method="POST" class="space-y-6">
+                @csrf
+                @method('PUT')
+
+                <!-- Site & Type d'incident -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="site_id" class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-bank mr-1 text-red-600"></i>
+                            Site de la Banque
+                        </label>
+                        <select id="site_id"
+                                name="site_id"
+                                required
+                                class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all font-medium">
+                            @foreach(\App\Models\Site::all() as $site)
+                            <option value="{{ $site->id }}" {{ $alerte->site_id == $site->id ? 'selected' : '' }}>{{ $site->nom }}</option>
+                            @endforeach
+                        </select>
+                        @error('site_id')
+                            <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                                <i class="ph-bold ph-warning-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="type_incident" class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-warning mr-1 text-amber-600"></i>
+                            Type d'Incident
+                        </label>
+                        <input type="text"
+                               id="type_incident"
+                               name="type_incident"
+                               value="{{ old('type_incident', $alerte->type_incident) }}"
+                               required
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-500 transition-all font-medium"
+                               placeholder="Ex: Intrusion, Vol, Agression">
+                        @error('type_incident')
+                            <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                                <i class="ph-bold ph-warning-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Horaires -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="heure_incident" class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-clock mr-1 text-blue-600"></i>
+                            Heure de l'Incident
+                        </label>
+                        <input type="time"
+                               id="heure_incident"
+                               name="heure_incident"
+                               value="{{ old('heure_incident', $alerte->heure_incident) }}"
+                               required
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium">
+                        @error('heure_incident')
+                            <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                                <i class="ph-bold ph-warning-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="heure_arrivee_brigade" class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-siren mr-1 text-purple-600"></i>
+                            Arrivée Brigade
+                        </label>
+                        <input type="time"
+                               id="heure_arrivee_brigade"
+                               name="heure_arrivee_brigade"
+                               value="{{ old('heure_arrivee_brigade', $alerte->heure_arrivee_brigade) }}"
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all font-medium">
+                        @error('heure_arrivee_brigade')
+                            <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                                <i class="ph-bold ph-warning-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="intervenant_nom" class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-user-focus mr-1 text-emerald-600"></i>
+                            Intervenant COS
+                        </label>
+                        <input type="text"
+                               id="intervenant_nom"
+                               name="intervenant_nom"
+                               value="{{ old('intervenant_nom', $alerte->intervenant_nom) }}"
+                               required
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all font-medium"
+                               placeholder="Nom de l'intervenant">
+                        @error('intervenant_nom')
+                            <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                                <i class="ph-bold ph-warning-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Statut -->
+                <div>
+                    <label for="statut" class="block text-sm font-bold text-gray-900 mb-2">
+                        <i class="ph-bold ph-check-circle mr-1 text-green-600"></i>
+                        Statut de l'Incident
+                    </label>
+                    <select id="statut"
+                            name="statut"
+                            class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all font-medium">
+                        <option value="non_traite" {{ $alerte->statut == 'non_traite' ? 'selected' : '' }}>🔴 Non Traité</option>
+                        <option value="en_cours" {{ $alerte->statut == 'en_cours' ? 'selected' : '' }}>🟡 En Cours</option>
+                        <option value="resolu" {{ $alerte->statut == 'resolu' ? 'selected' : '' }}>🟢 Résolu</option>
+                    </select>
+                    @error('statut')
+                        <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                            <i class="ph-bold ph-warning-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Observations -->
+                <div>
+                    <label for="observations" class="block text-sm font-bold text-gray-900 mb-2">
+                        <i class="ph-bold ph-note-pencil mr-1 text-indigo-600"></i>
+                        Rapport Final / Mise à jour
+                    </label>
+                    <textarea id="observations"
+                              name="observations"
+                              rows="5"
+                              class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-medium resize-none"
+                              placeholder="Décrivez les circonstances, actions menées, résultat de l'intervention...">{{ old('observations', $alerte->observations) }}</textarea>
+                    @error('observations')
+                        <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                            <i class="ph-bold ph-warning-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-between pt-6 border-t-2 border-gray-200">
+                    <a href="{{ route('alertes.index') }}"
+                       class="inline-flex items-center px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all">
+                        <i class="ph-bold ph-arrow-left mr-2"></i>
+                        Retour
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105">
+                        <i class="ph-bold ph-floppy-disk mr-2"></i>
+                        Enregistrer les Modifications
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <form action="{{ route('alertes.update', $alerte->id) }}" method="POST" class="row g-3">
-            @csrf @method('PUT')
-
-            {{-- SECTION : INFOS DE BASE (ISSUES DU CREATE) --}}
-            <div class="col-md-6">
-                <label class="small text-uppercase opacity-75 fw-bold">Nature de l'incident</label>
-                <input type="text" name="type_incident" value="{{ $alerte->type_incident }}" class="form-control bg-transparent text-white border-white-25 rounded-3 py-2" required>
-            </div>
-
-            <div class="col-md-6">
-                <label class="small text-uppercase opacity-75 fw-bold">Intervenant (Agent COS)</label>
-                <input type="text" name="intervenant_nom" value="{{ $alerte->intervenant_nom }}" class="form-control bg-transparent text-white border-white-25 rounded-3 py-2" required>
-            </div>
-
-            <div class="col-md-6 mt-3">
-                <label class="small text-uppercase opacity-75 fw-bold">Heure de l'incident</label>
-                <input type="time" name="heure_incident" value="{{ $alerte->heure_incident }}" class="form-control bg-transparent text-white border-white-25 rounded-3 py-2" required>
-            </div>
-
-            <div class="col-md-6 mt-3">
-                <label class="small text-uppercase opacity-75 fw-bold">Arrivée Brigade</label>
-                <input type="time" name="heure_arrivee_brigade" value="{{ $alerte->heure_arrivee_brigade }}" class="form-control bg-transparent text-white border-white-25 rounded-3 py-2">
-            </div>
-
-            <hr class="my-4 opacity-25">
-
-            {{-- SECTION : STATUT ET RAPPORT FINAL --}}
-            <div class="col-12">
-                <label class="small text-uppercase opacity-75 fw-bold">Statut du traitement</label>
-                <select name="statut" class="form-select bg-transparent text-white border-white-25 rounded-3 py-2">
-                    <option value="non_traite" {{ $alerte->statut == 'non_traite' ? 'selected' : '' }} class="text-dark">🔴 NON TRAITÉ</option>
-                    <option value="en_cours" {{ $alerte->statut == 'en_cours' ? 'selected' : '' }} class="text-dark">🟡 EN COURS</option>
-                    <option value="resolu" {{ $alerte->statut == 'resolu' ? 'selected' : '' }} class="text-dark">🟢 RÉSOLU</option>
-                </select>
-            </div>
-
-            <div class="col-12 mt-3">
-                <label class="small text-uppercase opacity-75 fw-bold">Rapport final / Mise à jour</label>
-                <textarea name="observations" class="form-control bg-transparent text-white border-white-25 rounded-3 py-2" rows="5">{{ $alerte->observations }}</textarea>
-            </div>
-
-            {{-- BOUTONS D'ACTION --}}
-            <div class="col-12 d-flex justify-content-between mt-5">
-                <a href="{{ route('alertes.index') }}" class="btn btn-outline-light rounded-pill px-5 fw-bold">ANNULER</a>
-                <button type="submit" class="btn btn-warning rounded-pill px-5 fw-bold text-dark shadow-lg">ENREGISTRER</button>
-            </div>
-        </form>
     </div>
 </div>
-
-<style>
-    .border-white-25 { border: 1px solid rgba(255,255,255,0.25) !important; }
-    .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-    .form-control:focus, .form-select:focus {
-        background-color: rgba(255,255,255,0.05) !important;
-        border-color: #ffc107 !important;
-        color: white !important;
-        box-shadow: none;
-    }
-</style>
 @endsection

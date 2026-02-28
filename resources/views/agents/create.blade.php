@@ -1,48 +1,149 @@
 @extends('layouts.admin')
 
-@section('content')
-<div class="d-flex justify-content-center align-items-center py-5">
-    <div class="glass-card p-5 shadow-lg" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(25px); border-radius: 45px; border: 1px solid rgba(255,255,255,0.2); width: 100%; max-width: 550px; color: white;">
-        <div class="text-center mb-4">
-            <i class="ph ph-user-plus h1 text-primary"></i>
-            <h2 class="fw-bold text-shadow mt-2">Ajouter un Agent</h2>
-        </div>
+@section('content_header_title', 'Nouvel Agent')
+@section('content_header_subtitle', 'Enregistrer un nouvel agent de sécurité')
 
-        <form action="{{ route('agents.store') }}" method="POST" class="row g-3">
-            @csrf
-            <div class="col-md-6">
-                <label class="small text-uppercase opacity-75 fw-bold">Nom</label>
-                <input type="text" name="nom" class="form-control bg-transparent text-white border-white-25 rounded-3 py-2" required>
+@section('content')
+<div class="max-w-3xl mx-auto">
+    <div class="glass-card rounded-3xl p-8 lg:p-10" x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)">
+        <div x-show="show"
+             x-transition:enter="transition ease-out duration-500"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
+
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <i class="ph-bold ph-user-plus text-white text-4xl"></i>
+                </div>
+                <h2 class="text-3xl font-black text-gray-900 mb-2">Ajouter un Agent</h2>
+                <p class="text-gray-600 font-medium">Enregistrez les informations du nouvel agent</p>
             </div>
-            <div class="col-md-6">
-                <label class="small text-uppercase opacity-75 fw-bold">Prénom</label>
-                <input type="text" name="prenom" class="form-control bg-transparent text-white border-white-25 rounded-3 py-2" required>
-            </div>
-            <div class="col-12 mt-3">
-                <label class="small text-uppercase opacity-75 fw-bold">Statut Initial</label>
-                <select name="statut" class="form-select bg-transparent text-white border-white-25 rounded-3 py-2">
-                    <option value="Présent" class="text-dark">✅ Présent</option>
-                    <option value="Absent" class="text-dark">❌ Absent</option>
-                    <option value="Congé" class="text-dark">🏖️ Congé</option>
-                </select>
-            </div>
-            <div class="col-12 mt-3">
-                <label class="small text-uppercase opacity-75 fw-bold">Site d'Affectation</label>
-                <select name="site_id" class="form-select bg-transparent text-white border-white-25 rounded-3 py-2">
-                    @foreach($sites as $site)
-                    <option value="{{ $site->id }}" class="text-dark">{{ $site->nom }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-12">
-                <label class="small text-uppercase opacity-75 fw-bold mb-2 text-white">Numéro de Téléphone</label>
-                <input type="text" name="telephone" class="form-control bg-white-10 text-black border-0 rounded-3 py-3 px-4" placeholder="Ex: 77 000 00 00">
-            </div>
-            <div class="col-12 d-flex justify-content-between mt-5">
-                <a href="{{ route('agents.index') }}" class="btn btn-outline-light rounded-pill px-4">Annuler</a>
-                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow fw-bold text-uppercase">Enregistrer</button>
-            </div>
-        </form>
+
+            <!-- Form -->
+            <form action="{{ route('agents.store') }}" method="POST" class="space-y-6">
+                @csrf
+
+                <!-- Nom & Prénom -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="nom" class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-user mr-1 text-blue-600"></i>
+                            Nom
+                        </label>
+                        <input type="text"
+                               id="nom"
+                               name="nom"
+                               value="{{ old('nom') }}"
+                               required
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
+                               placeholder="Ex: DIOP">
+                        @error('nom')
+                            <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                                <i class="ph-bold ph-warning-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="prenom" class="block text-sm font-bold text-gray-900 mb-2">
+                            <i class="ph-bold ph-user mr-1 text-blue-600"></i>
+                            Prénom
+                        </label>
+                        <input type="text"
+                               id="prenom"
+                               name="prenom"
+                               value="{{ old('prenom') }}"
+                               required
+                               class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
+                               placeholder="Ex: Mohamed">
+                        @error('prenom')
+                            <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                                <i class="ph-bold ph-warning-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Téléphone -->
+                <div>
+                    <label for="telephone" class="block text-sm font-bold text-gray-900 mb-2">
+                        <i class="ph-bold ph-phone mr-1 text-emerald-600"></i>
+                        Numéro de Téléphone
+                    </label>
+                    <input type="text"
+                           id="telephone"
+                           name="telephone"
+                           value="{{ old('telephone') }}"
+                           class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all font-medium"
+                           placeholder="Ex: 77 000 00 00">
+                    @error('telephone')
+                        <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                            <i class="ph-bold ph-warning-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Statut -->
+                <div>
+                    <label for="statut" class="block text-sm font-bold text-gray-900 mb-2">
+                        <i class="ph-bold ph-check-circle mr-1 text-amber-600"></i>
+                        Statut Initial
+                    </label>
+                    <select id="statut"
+                            name="statut"
+                            class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-500 transition-all font-medium">
+                        <option value="Présent">✅ Présent</option>
+                        <option value="Absent">❌ Absent</option>
+                        <option value="Congé">🏖️ Congé</option>
+                    </select>
+                    @error('statut')
+                        <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                            <i class="ph-bold ph-warning-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Site d'Affectation -->
+                <div>
+                    <label for="site_id" class="block text-sm font-bold text-gray-900 mb-2">
+                        <i class="ph-bold ph-bank mr-1 text-purple-600"></i>
+                        Site d'Affectation
+                    </label>
+                    <select id="site_id"
+                            name="site_id"
+                            class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all font-medium">
+                        @foreach($sites as $site)
+                            <option value="{{ $site->id }}">{{ $site->nom }}</option>
+                        @endforeach
+                    </select>
+                    @error('site_id')
+                        <p class="mt-2 text-sm text-red-600 flex items-center font-medium">
+                            <i class="ph-bold ph-warning-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-between pt-6 border-t-2 border-gray-200">
+                    <a href="{{ route('agents.index') }}"
+                       class="inline-flex items-center px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all">
+                        <i class="ph-bold ph-arrow-left mr-2"></i>
+                        Annuler
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105">
+                        <i class="ph-bold ph-check-circle mr-2"></i>
+                        Enregistrer l'Agent
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

@@ -1,178 +1,242 @@
 @extends('layouts.admin')
 
+@section('content_header_title', 'Plannings Hebdomadaires')
+@section('content_header_subtitle', 'Gestion des factions par secteur')
+
 @section('content')
-<div class="container-fluid py-4">
-    {{-- 1. BARRE DE RECHERCHE ET ACTIONS --}}
-    <div class="glass-card p-4 mb-5 border-0 shadow-lg" style="background: rgba(255,255,255,0.1) !important; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.15) !important;">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h2 class="fw-bold text-white mb-0">
-                    <i class="ph ph-calendar-blank me-2 text-info"></i>
-                    {{ $nomSecteur ?? 'Planning Global' }}
-                </h2>
-            </div>
-            <div class="col-md-6">
-                <form action="{{ route('plannings.index') }}" method="GET" class="d-flex bg-white-10 rounded-pill p-1">
-                    <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control border-0 bg-transparent text-white px-3" placeholder="Trouver un site ou un agent...">
-                    <button type="submit" class="btn btn-info rounded-pill px-4 fw-bold shadow-sm">RECHERCHER</button>
-                </form>
-            </div>
+
+{{-- Header avec Recherche --}}
+<div class="glass-card rounded-2xl p-6 mb-6">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <h3 class="text-2xl font-black text-gray-900">
+            <i class="ph-bold ph-calendar-blank text-purple-600 mr-2"></i>
+            {{ $nomSecteur ?? 'Planning Global' }}
+        </h3>
+
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <form action="{{ route('plannings.index') }}" method="GET" class="flex-1 md:flex-initial">
+                <div class="relative">
+                    <input type="text"
+                           name="search"
+                           value="{{ $search ?? '' }}"
+                           placeholder="Trouver un site ou un agent..."
+                           class="w-full md:w-80 pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all font-medium">
+                    <i class="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+                    <button type="submit"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm rounded-lg transition-all">
+                        Rechercher
+                    </button>
+                </div>
+            </form>
         </div>
-    </div>
-
-    {{-- 2. LISTE DES SITES --}}
-    <div class="row g-4">
-        @forelse($sites as $site)
-        <div class="col-12">
-            {{-- ENTÊTE DU SITE (AJOUT DU DATA-BS-TOGGLE POUR LE PLIAGE) --}}
-            <div class="glass-card p-3 d-flex justify-content-between align-items-center mb-2"
-                 style="cursor: pointer; background: rgba(255,255,255,0.08);"
-                 data-bs-toggle="collapse"
-                 data-bs-target="#site-collapse-{{ $site->id }}" {{-- Correction : data-bs-target au lieu de href --}}
-                 aria-expanded="false">
-
-                <div class="d-flex align-items-center">
-                    <div class="p-2 bg-primary rounded-3 me-3 shadow-sm"><i class="ph ph-bank h4 mb-0 text-white"></i></div>
-                    <div>
-                        <h5 class="fw-bold mb-0 text-white">{{ $site->nom }}</h5>
-                        <div class="d-flex gap-3 align-items-center">
-                            <small class="text-info fw-bold"><i class="ph ph-map-pin me-1"></i>{{ $site->secteur }}</small>
-                            <div class="d-flex align-items-center bg-white-5 px-2 py-1 rounded-pill border border-white-10"
-                                 data-bs-toggle="modal" data-bs-target="#modalRPE{{ $site->id }}"
-                                 onclick="event.stopPropagation();">
-                                <small class="text-warning fw-bold" style="cursor: pointer;">
-                                    <i class="ph ph-phone-call me-1"></i> RPE: {{ $site->telephone ?? 'À renseigner' }}
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center">
-                    <span class="badge bg-dark rounded-pill me-3 px-3 border border-white-10">{{ $site->agents->count() }} Agents</span>
-                    <i class="ph ph-caret-down text-white opacity-50 transition-icon"></i>
-                </div>
-            </div>
-
-            {{-- MODALE RPE (Conservée) --}}
-            <div class="modal fade text-dark" id="modalRPE{{ $site->id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content" style="border-radius: 20px;">
-                        <div class="modal-header border-0">
-                            <h5 class="fw-bold">Contact RPE - {{ $site->nom }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-center py-4">
-                            <i class="ph ph-phone-call display-1 text-primary mb-3"></i>
-                            <h3 class="fw-bold">{{ $site->telephone ?? 'Non renseigné' }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ZONE COLLAPSE --}}
-            <div class="collapse {{ (isset($nomSecteur) || isset($search)) ? 'show' : '' }}" id="site-collapse-{{ $site->id }}">
-                <div class="row g-3 p-3 bg-white-5 rounded-4 mb-4">
-                    @foreach($site->agents as $agent)
-                    <div class="col-md-6 col-xl-4">
-                        <div class="glass-card p-4 h-100 border-0 shadow-sm" style="background: rgba(0,0,0,0.4); border-radius: 25px;">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="ph ph-user-circle h2 mb-0 me-2 text-primary"></i>
-                                    <div>
-                                        <h6 class="fw-bold mb-0 text-white">{{ $agent->nom }} {{ $agent->prenom }}</h6>
-                                        <small class="text-white-50 fw-bold"><i class="ph ph-phone me-1"></i>{{ $agent->telephone ?? 'Aucun numéro' }}</small>
-                                    </div>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <a href="{{ route('plannings.create', $agent->id) }}" class="btn btn-outline-info btn-xs rounded-pill px-2 border-0" style="background: rgba(0, 210, 255, 0.1);">
-                                        <i class="ph ph-calendar-plus h5 mb-0"></i>
-                                    </a>
-                                    @if($agent->planning)
-                                    <form action="{{ route('plannings.destroy', $agent->planning->id) }}" method="POST" id="delete-form-{{ $agent->planning->id }}" class="d-none">
-                                        @csrf @method('DELETE')
-                                    </form>
-                                    <button type="button" class="btn btn-outline-danger btn-xs rounded-pill px-2 border-0 delete-btn" data-id="{{ $agent->planning->id }}" style="background: rgba(220, 53, 69, 0.1);">
-                                        <i class="ph ph-trash h5 mb-0"></i>
-                                    </button>
-                                    @endif
-                                </div>
-                            </div>
-
-                            @if($agent->planning)
-                            <div class="table-responsive">
-                                <table class="table table-sm table-bordered border-white-10 text-white text-center mb-0" style="font-size: 0.7rem;">
-                                    <thead class="opacity-50"><tr><th>L</th><th>M</th><th>M</th><th>J</th><th>V</th><th>S</th><th>D</th></tr></thead>
-                                    <tbody>
-                                    <tr>
-                                        @foreach(['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'] as $j)
-                                        @php $h = "h_$j"; @endphp
-                                        <td>
-                                            @if($agent->planning->$j == 'F')
-                                            <span class="fw-bold text-info">F</span><br>
-                                            <span class="text-info fw-bold" style="font-size: 0.55rem;">{{ $agent->planning->$h }}</span>
-                                            @else
-                                            <span class="fw-bold text-danger">R</span><br>
-                                            <span class="text-white-50" style="font-size: 0.55rem;">Repos</span>
-                                            @endif
-                                        </td>
-                                        @endforeach
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            @else
-                            <div class="text-center py-2">
-                                <a href="{{ route('plannings.create', $agent->id) }}" class="btn btn-sm btn-link text-info text-decoration-none p-0 italic" style="font-size: 0.75rem;">
-                                    <i class="ph ph-plus-circle me-1"></i> Générer un planning
-                                </a>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-        @empty
-        <div class="col-12 text-center py-5 text-white opacity-50"><i class="ph ph-magnifying-glass display-1"></i><p class="mt-3">Aucun site trouvé.</p></div>
-        @endforelse
     </div>
 </div>
 
+{{-- Liste des Sites --}}
+<div class="space-y-4">
+    @forelse($sites as $site)
+    <div x-data="{
+        open: {{ (isset($nomSecteur) || isset($search)) ? 'true' : 'false' }},
+        showRPEModal: false
+    }" class="glass-card rounded-2xl overflow-hidden">
+
+        {{-- Header du Site (cliquable) --}}
+        <div @click="open = !open"
+             class="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 cursor-pointer transition-all flex items-center justify-between">
+            <div class="flex items-center gap-4 flex-1">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="ph-bold ph-bank text-white text-2xl"></i>
+                </div>
+                <div class="flex-1">
+                    <h5 class="text-xl font-black text-gray-900">{{ $site->nom }}</h5>
+                    <div class="flex items-center gap-3 mt-1">
+                        <span class="text-sm font-bold text-purple-600">
+                            <i class="ph-bold ph-map-pin mr-1"></i>{{ $site->secteur }}
+                        </span>
+                        @if($site->telephone)
+                        <button @click.stop="showRPEModal = true"
+                                class="px-3 py-1 bg-amber-100 hover:bg-amber-200 border-2 border-amber-300 rounded-full text-xs font-bold text-amber-700 transition-all">
+                            <i class="ph-bold ph-phone-call mr-1"></i>RPE: {{ $site->telephone }}
+                        </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-full">
+                    {{ $site->agents->count() }} Agents
+                </span>
+                <i class="ph-bold ph-caret-down text-gray-600 text-xl transition-transform duration-300"
+                   :class="{ 'rotate-180': open }"></i>
+            </div>
+        </div>
+
+        {{-- Modal RPE (Alpine.js) --}}
+        <template x-teleport="body">
+            <div x-show="showRPEModal"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="showRPEModal = false"
+                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div @click.stop
+                     x-show="showRPEModal"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="glass-card rounded-3xl p-8 max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <i class="ph-bold ph-phone-call text-white text-4xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-gray-900 mb-2">Contact RPE</h3>
+                        <p class="text-gray-600 font-medium mb-4">{{ $site->nom }}</p>
+                        <div class="text-4xl font-black text-purple-600">{{ $site->telephone ?? 'Non renseigné' }}</div>
+                        <button @click="showRPEModal = false"
+                                class="mt-6 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-all">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        {{-- Zone de contenu (Agents avec plannings) --}}
+        <div x-show="open"
+             x-collapse
+             class="bg-gray-50 p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($site->agents as $agent)
+                <div class="glass-card rounded-xl p-4 hover:shadow-lg transition-all">
+                    {{-- Header Agent --}}
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="ph-bold ph-user-circle text-purple-600 text-3xl"></i>
+                            <div>
+                                <h6 class="font-black text-gray-900 text-sm">{{ $agent->nom }} {{ $agent->prenom }}</h6>
+                                <p class="text-xs font-medium text-gray-600">
+                                    <i class="ph-bold ph-phone mr-1"></i>{{ $agent->telephone ?? 'N/A' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex gap-1">
+                            <a href="{{ route('plannings.create', $agent->id) }}"
+                               class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                               title="Créer/Modifier planning">
+                                <i class="ph-bold ph-calendar-plus text-lg"></i>
+                            </a>
+                            @if($agent->planning)
+                            <button type="button"
+                                    onclick="confirmDelete({{ $agent->planning->id }})"
+                                    class="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+                                    title="Supprimer planning">
+                                <i class="ph-bold ph-trash text-lg"></i>
+                            </button>
+                            <form action="{{ route('plannings.destroy', $agent->planning->id) }}"
+                                  method="POST"
+                                  id="delete-form-{{ $agent->planning->id }}"
+                                  class="hidden">
+                                @csrf @method('DELETE')
+                            </form>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Planning Hebdomadaire --}}
+                    @if($agent->planning)
+                    <div class="space-y-2">
+                        @foreach(['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'] as $index => $j)
+                        @php
+                            $h = "h_$j";
+                            $jours_complets = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+                        @endphp
+                        <div class="flex items-center gap-3 p-3 rounded-lg {{ $agent->planning->$j == 'F' ? 'bg-blue-50 border-2 border-blue-200' : 'bg-gray-50 border-2 border-gray-200' }} transition-all hover:shadow-md">
+                            {{-- Jour --}}
+                            <div class="w-28 flex-shrink-0">
+                                <span class="text-sm font-black text-gray-900">{{ $jours_complets[$index] }}</span>
+                            </div>
+
+                            {{-- Badge Statut --}}
+                            @if($agent->planning->$j == 'F')
+                            <div class="flex items-center gap-3 flex-1">
+                                <span class="inline-flex items-center px-4 py-1.5 bg-blue-600 text-white rounded-full text-xs font-black shadow-sm">
+                                    <i class="ph-bold ph-clock mr-1.5"></i> FACTION
+                                </span>
+                                <span class="text-sm font-bold text-blue-600">{{ $agent->planning->$h }}</span>
+                            </div>
+                            @else
+                            <div class="flex items-center gap-3 flex-1">
+                                <span class="inline-flex items-center px-4 py-1.5 bg-gray-400 text-white rounded-full text-xs font-black shadow-sm">
+                                    <i class="ph-bold ph-moon mr-1.5"></i> REPOS
+                                </span>
+                            </div>
+                            @endif
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="text-center py-4">
+                        <a href="{{ route('plannings.create', $agent->id) }}"
+                           class="inline-flex items-center text-sm font-bold text-purple-600 hover:text-purple-700 transition-colors">
+                            <i class="ph-bold ph-plus-circle mr-2"></i>
+                            Générer un planning
+                        </a>
+                    </div>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @empty
+    <div class="glass-card rounded-3xl p-12 text-center">
+        <i class="ph-bold ph-calendar-x text-gray-400 text-8xl mb-4"></i>
+        <h3 class="text-2xl font-black text-gray-900 mb-2">Aucun site trouvé</h3>
+        <p class="text-gray-600 font-medium">Modifiez votre recherche ou créez un nouveau site</p>
+    </div>
+    @endforelse
+</div>
+
+@endsection
+
 @push('scripts')
 <script>
-    // Script de suppression
-    $(document).on('click', '.delete-btn', function() {
-        const id = $(this).data('id');
+    function confirmDelete(id) {
         Swal.fire({
-            title: 'Supprimer le planning ?',
+            title: 'Supprimer le Planning ?',
+            html: '<p class="text-gray-600 font-medium">Cette action est irréversible. Le planning sera définitivement supprimé.</p>',
             icon: 'warning',
+            iconColor: '#f59e0b',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Supprimer',
-            background: '#1a1a1a',
-            color: '#fff'
+            confirmButtonText: '<i class="ph-bold ph-trash mr-2"></i>Oui, supprimer',
+            cancelButtonText: '<i class="ph-bold ph-x mr-2"></i>Annuler',
+            background: '#ffffff',
+            color: '#111827',
+            customClass: {
+                popup: 'rounded-3xl shadow-2xl border-2 border-gray-200',
+                title: 'text-2xl font-black text-gray-900 pt-6',
+                htmlContainer: 'text-gray-600',
+                confirmButton: 'px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 mx-2',
+                cancelButton: 'px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all mx-2'
+            },
+            buttonsStyling: false,
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown animate__faster'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp animate__faster'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
-                $(`#delete-form-${id}`).submit();
+                document.getElementById('delete-form-' + id).submit();
             }
         });
-    });
-
-    // Animation de la flèche lors du pliage/dépliage
-    $('.collapse').on('show.bs.collapse', function () {
-        $(this).prev().find('.transition-icon').css('transform', 'rotate(180deg)');
-    }).on('hide.bs.collapse', function () {
-        $(this).prev().find('.transition-icon').css('transform', 'rotate(0deg)');
-    });
+    }
 </script>
 @endpush
-
-<style>
-    .transition-icon { transition: transform 0.3s ease; }
-    .bg-white-10 { background: rgba(255,255,255,0.1); }
-    .bg-white-5 { background: rgba(255,255,255,0.05); }
-    .btn-xs { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
-    .italic { font-style: italic; }
-</style>
-@endsection

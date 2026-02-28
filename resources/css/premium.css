@@ -1,0 +1,262 @@
+/* VIGILANCE-COS Premium Styles */
+
+/* === ANIMATIONS === */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+/* === GLASS MORPHISM === */
+.glass-effect {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.glass-strong {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+/* === GRADIENT BACKGROUNDS === */
+.bg-gradient-premium {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-security {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* === HOVER EFFECTS === */
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.hover-glow {
+    transition: box-shadow 0.3s ease;
+}
+
+.hover-glow:hover {
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+}
+
+/* === CUSTOM SCROLLBAR === */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* === LOADING SKELETON === */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(51, 65, 85, 0.3) 0%,
+        rgba(71, 85, 105, 0.4) 50%,
+        rgba(51, 65, 85, 0.3) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* === STATUS INDICATORS === */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot.active {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulse 2s infinite;
+}
+
+.status-dot.inactive {
+    background: #6b7280;
+}
+
+.status-dot.danger {
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+    animation: pulse 2s infinite;
+}
+
+/* === TOOLTIP === */
+.tooltip {
+    position: relative;
+}
+
+.tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.95);
+    color: white;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.tooltip:hover::before {
+    opacity: 1;
+}
+
+/* === PAGINATION CUSTOM === */
+.pagination {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.pagination a,
+.pagination span {
+    padding: 8px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 8px;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+}
+
+.pagination a:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(14, 165, 233, 0.3);
+    color: #0ea5e9;
+}
+
+.pagination .active span {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+    border-color: #0ea5e9;
+    color: white;
+}
+
+/* === BADGE PULSE === */
+.badge-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* === CARD REVEAL === */
+.card-reveal {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* === SMOOTH TRANSITIONS === */
+* {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === FOCUS STATES === */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: rgba(14, 165, 233, 0.5);
+    border-color: #0ea5e9;
+}
+
+/* === PREMIUM SHADOWS === */
+.shadow-premium {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-premium-lg {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.shadow-glow {
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+}
+
+.shadow-glow-sm {
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+}
+
+/* === TABLE HOVER === */
+tr.table-row-hover {
+    transition: background-color 0.2s ease;
+}
+
+tr.table-row-hover:hover {
+    background-color: rgba(30, 41, 59, 0.3);
+}
+
+/* === COLLAPSIBLE === */
+[x-cloak] {
+    display: none !important;
+}

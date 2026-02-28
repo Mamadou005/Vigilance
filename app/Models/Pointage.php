@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pointage extends Model
 {
     protected $fillable = [
-        'agent_id', 'site_id', 'date_pointage', 'type',
+        'agent_id', 'site_id', 'date_pointage', 'type', 'salaire_base',
         'montant', 'motif', 'nb_jours', 'agent_remplace'
     ];
 

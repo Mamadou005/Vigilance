@@ -52,7 +52,12 @@ class PointageController extends Controller
 
         $pointages = $query->orderBy('date_pointage', 'desc')->get();
 
-        return view('pointages.index', compact('pointages', 'type', 'search'));
+        // Récupérer les années disponibles dans la base de données
+        $years = Pointage::selectRaw('DISTINCT strftime("%Y", date_pointage) as year')
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
+        return view('pointages.index', compact('pointages', 'type', 'search', 'years'));
     }
     public function store(Request $request)
     {
@@ -69,15 +74,21 @@ class PointageController extends Controller
 
         $agent = Agent::findOrFail($request->agent_id);
 
-        if ($request->has('salaire_base') && $request->salaire_base > 0) {
+        // Utiliser le salaire fourni ou le salaire actuel de l'agent
+        $salaireAUtiliser = $request->salaire_base ?? $agent->salaire_base ?? 0;
+
+        // Mettre à jour le salaire de l'agent si un nouveau salaire est fourni
+        if ($request->has('salaire_base') && $request->salaire_base > 0 && $request->salaire_base != $agent->salaire_base) {
             $agent->update(['salaire_base' => $request->salaire_base]);
         }
 
+        // Créer le pointage avec le salaire de base du moment (historique)
         Pointage::create([
             'agent_id' => $request->agent_id,
             'site_id' => $agent->site_id,
             'date_pointage' => $request->date_pointage,
             'type' => $request->type,
+            'salaire_base' => $salaireAUtiliser, // NOUVEAU : Sauvegarde du salaire au moment du pointage
             'montant' => $request->montant,
             'motif' => $request->motif,
             'nb_jours' => $request->nb_jours ?? 1,
@@ -90,7 +101,8 @@ class PointageController extends Controller
     public function edit($id)
     {
         $pointage = Pointage::with('agent')->findOrFail($id);
-        return view('pointages.edit', compact('pointage'));
+        $agents = Agent::orderBy('nom')->orderBy('prenom')->get();
+        return view('pointages.edit', compact('pointage', 'agents'));
     }
 
     public function update(Request $request, $id)
