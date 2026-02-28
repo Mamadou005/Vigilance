@@ -9,8 +9,8 @@ class AddRoleToUsersTable extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            // Ajout du rôle : 'responsable' ou 'agent'
-            $table->string('role')->default('responsable')->after('password');
+            // Ajout du rôle : 'admin', 'responsable' ou 'agent'
+            $table->enum('role', ['admin', 'responsable', 'agent'])->default('agent')->after('password');
         });
     }
 

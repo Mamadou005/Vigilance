@@ -8,6 +8,8 @@ use App\Http\Controllers\AlerteController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\PointageController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\StatistiqueController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Agent;
 use App\Models\Alerte;
@@ -60,6 +62,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/pointages/{id}', [PointageController::class, 'update'])->name('pointages.update');
     Route::delete('/pointages/{id}', [PointageController::class, 'destroy'])->name('pointages.destroy');
     Route::get('/pointages/export', [PointageController::class, 'export'])->name('pointages.export');
+
+    // Gestion des utilisateurs (tous peuvent voir, seuls les admins peuvent modifier)
+    Route::resource('users', UserController::class);
+
+    // Statistiques et suivi
+    Route::get('/statistiques', [StatistiqueController::class, 'index'])->name('statistiques.index');
 });
 
 require __DIR__.'/auth.php';
